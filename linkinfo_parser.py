@@ -18,6 +18,14 @@ class InputFile:
     def add_component(self, component: "ObjectComponent") -> None:
         self.object_components.append(component)
 
+    def get_sorted_components(self) -> List["ObjectComponent"]:
+        """Returns object_components sorted by size in descending order."""
+        return sorted(self.object_components, key=lambda x: x.size or 0, reverse=True)
+
+    def get_total_size(self) -> int:
+        """Returns the total size by summing all object component sizes."""
+        return sum(comp.size or 0 for comp in self.object_components)
+
 
 @dataclass
 class ObjectComponent:
@@ -43,8 +51,9 @@ class ObjectComponent:
 
 
 class LinkInfoParser:
-    def __init__(self, xml_path: str):
+    def __init__(self, xml_path: str, filter_debug: bool = False):
         self.xml_path = xml_path
+        self.filter_debug = filter_debug
         self.input_files: Dict[str, InputFile] = {}
         self.object_components: Dict[str, ObjectComponent] = {}
 
@@ -118,6 +127,10 @@ class LinkInfoParser:
                 for ref in rw.findall("object_component_ref"):
                     oc.refd_rw_sections.append(ref.attrib["idref"])
 
+            # Filter out .debug_ components if enabled
+            if self.filter_debug and oc.name and oc.name.startswith(".debug_"):
+                continue
+
             self.object_components[oc_id] = oc
 
     def _resolve_cross_references(self) -> None:
@@ -153,13 +166,15 @@ class LinkInfoParser:
 # Example usage
 # =========================
 if __name__ == "__main__":
-    parser = LinkInfoParser("example_files/dpl_demo_release_linkinfo.xml")
+    parser = LinkInfoParser(
+        "example_files/dpl_demo_release_linkinfo.xml", filter_debug=True
+    )
     parser.parse()
 
     # Example: list components per input file
     for input_file in parser.input_files.values():
-        print(f"{input_file.name}: {len(input_file.object_components)} components")
-
-    # Example: inspect one object component
-    oc = next(iter(parser.object_components.values()))
-    print(oc.name, oc.size, oc.input_file.name if oc.input_file else None)
+        print(
+            f"{input_file.name}: {len(input_file.object_components)} components (total size: {input_file.get_total_size()} bytes)"
+        )
+        for comp in input_file.get_sorted_components():
+            print(f"  - {comp.name} (size: {comp.size})")
