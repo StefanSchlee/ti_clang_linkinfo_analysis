@@ -35,8 +35,8 @@ class FeatureGroupClassifier:
     def __init__(
         self,
         model_url: str,
+        batch_size: int = 5,
         model: str = "gpt-4o-mini",
-        batch_size: int = 40,
         debug: bool = False,
     ):
         self.client = OpenAI(base_url=model_url)
@@ -55,84 +55,96 @@ class FeatureGroupClassifier:
     # ------------------------
     # Phase 1: Initial Groups
     # ------------------------
+    def load_initial_groups_from_file(self, path: str) -> None:
+        with open(path, "r") as f:
+            data = json.load(f)
 
-    def create_initial_groups(self, input_files: Dict[str, InputFile]) -> None:
-        input_summary = [
-            {
-                "id": f.id,
-                "name": f.name,
-                "path": f.path,
-            }
-            for f in input_files.values()
-        ]
-
-        prompt = f"""
-You are an expert in embedded software architecture and linker outputs.
-
-Your task is to derive high-level SOFTWARE COMPONENTS from the list of input files.
-
-A FeatureGroup is NOT:
-- a single file
-- a single object
-- a section
-- a technical artifact
-
-A FeatureGroup IS:
-A meaningful architectural software component that a human developer would recognize, such as:
-- Operating system / RTOS
-- Runtime / standard library
-- Device drivers
-- Communication stacks
-- Cryptography libraries
-- Middleware
-- Startup / exception handling
-- Application specific modules written by the user
-- Third party libraries
-
-Each FeatureGroup should represent a logical part of the software with a clear responsibility.
-
-You will receive a list of input files (object files and libraries) with names and paths.
-From this, infer which files belong to the same architectural software component.
-
-Create a list of FeatureGroups that together describe the whole software architecture.
-
-Return JSON in the following format format:
-
-{{
-  "feature_groups": [
-    {{
-      "name": "...",
-      "description": "..."
-    }},
-    {{
-        # ... more FeatureGroups ...
-    }}
-  ]
-}}
-
-Input files:
-{json.dumps(input_summary, indent=2)}
-"""
-        self.logger.info(
-            f"Creating initial FeatureGroups from {len(input_files)} input files..."
-        )
-        self.logger.debug("=== PHASE 1 PROMPT ===")
-        self.logger.debug(prompt)
-
-        response = self._chat(prompt)
-
-        self.logger.debug("=== PHASE 1 RESPONSE ===")
-        self.logger.debug(response)
-
-        data = json.loads(response)
-
-        for fg in data["feature_groups"]:
+        for fg in data.get("feature_groups", []):
             self.feature_groups[fg["name"]] = FeatureGroup(
                 name=fg["name"],
                 description=fg["description"],
             )
 
-        self.logger.info(f"Created {len(self.feature_groups)} initial FeatureGroups")
+        self.logger.info(
+            f"Loaded {len(self.feature_groups)} initial FeatureGroups from file"
+        )
+
+    def create_initial_groups(self, input_files: Dict[str, InputFile]) -> None:
+        files = list(input_files.values())
+
+        for i in range(0, len(files), self.batch_size):
+            batch = files[i : i + self.batch_size]
+            self.logger.info(f"Phase 1: Processing input file batch {i}-{i+len(batch)}")
+            self._process_inputfile_batch(batch)
+
+    def _process_inputfile_batch(self, batch: List[InputFile]) -> None:
+        batch_summary = [
+            {
+                "id": f.id,
+                "name": f.name,
+                "path": f.path,
+            }
+            for f in batch
+        ]
+
+        groups_summary = [
+            {"name": fg.name, "description": fg.description}
+            for fg in self.feature_groups.values()
+        ]
+
+        prompt = f"""
+    You are building an architectural model of an embedded software based on linker input files.
+
+    A FeatureGroup is a high-level architectural software component such as:
+    - OS / RTOS
+    - standard c/cpp libraries
+    - a driver library
+    - a middleware component
+    - a Third party library
+    - other major software component like parameter management, file system, networking stack, etc.
+
+    Already found FeatureGroups (may be empty):
+    {json.dumps(groups_summary, indent=2)}
+
+    New input files to analyze:
+    {json.dumps(batch_summary, indent=2)}
+
+    Tasks:
+    1. Analyze the input files and identify potential new FeatureGroups that are not yet in the existing list.
+
+    Return JSON in this format:
+    {{
+        "new_groups": [
+            {{
+                "name": "...",
+                "description": "..."
+            }}
+            # more new groups
+        ]
+    }}
+    """
+
+        self.logger.debug("=== PHASE 1 BATCH PROMPT ===")
+        self.logger.debug(prompt)
+
+        response = self._chat(prompt)
+
+        self.logger.debug("=== PHASE 1 BATCH RESPONSE ===")
+        self.logger.debug(response)
+
+        data = json.loads(response)
+
+        # Add new groups
+        self.logger.debug(
+            f"Adding {len(data.get('new_groups', []))} new FeatureGroups..."
+        )
+        for new in data.get("new_groups", []):
+            if new["name"] not in self.feature_groups:
+                self.logger.debug(f"Creating new group '{new['name']}'")
+                self.feature_groups[new["name"]] = FeatureGroup(
+                    name=new["name"],
+                    description=new["description"],
+                )
 
     # ------------------------
     # Phase 2: Classification
@@ -251,13 +263,17 @@ if __name__ == "__main__":
     parser.parse()
 
     classifier = FeatureGroupClassifier(
-        model_url="http://localhost:11434/v1", model="gemma3:1b-it-qat", debug=True
+        model_url="http://localhost:11434/v1",
+        model="gemma3:1b-it-qat",
+        debug=True,
+        batch_size=20,
     )
 
     print("Phase 1: Creating initial FeatureGroups...")
+    classifier.load_initial_groups_from_file("initial_feature_groups.json")
     # classifier.create_initial_groups(parser.input_files)
     sample_keys = random.sample(
-        list(parser.input_files.keys()), min(20, len(parser.input_files))
+        list(parser.input_files.keys()), min(40, len(parser.input_files))
     )
     classifier.create_initial_groups({k: parser.input_files[k] for k in sample_keys})
 

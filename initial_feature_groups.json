@@ -1,0 +1,8 @@
+{
+    "feature_groups": [
+        {
+            "name": "FreeRTOS Kernel",
+            "description": "Real-time operating system kernel components"
+        }
+    ]
+}

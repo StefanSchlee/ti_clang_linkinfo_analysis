@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 import xml.etree.ElementTree as ET
+import os
 
 
 # =========================
@@ -68,6 +69,59 @@ class LinkInfoParser:
         self._parse_input_files(root)
         self._parse_object_components(root)
         self._resolve_cross_references()
+
+    def get_sorted_input_files(self) -> List[InputFile]:
+        """Returns input files sorted by total_size in descending order."""
+        return sorted(
+            self.input_files.values(), key=lambda f: f.get_total_size(), reverse=True
+        )
+
+    def export_sorted_input_files_markdown(self, output_path: str) -> None:
+        """Write the sorted input files and their components to a Markdown file.
+
+        Format example:
+
+        # Input Files (sorted by total size)
+
+        ## <input_name> (N components, total size: X bytes)
+
+        - <component_name> (size: Y)
+        - ...
+        """
+        lines: List[str] = []
+        total_all_inputs = sum(f.get_total_size() for f in self.input_files.values())
+        lines.append(f"# Input Files ({len(self.input_files)}, sorted by total size)\n")
+        lines.append(f"**Total size (all input files): {total_all_inputs} bytes**\n\n")
+
+        for input_file in self.get_sorted_input_files():
+            lines.append(
+                f"## {input_file.name or input_file.id} ({len(input_file.object_components)} components, total size: {input_file.get_total_size()} bytes)\n"
+            )
+            if input_file.path:
+                lines.append(f"**Path:** `{input_file.path}`\n\n")
+            comps = input_file.get_sorted_components()
+            if not comps:
+                lines.append("_No components_\n")
+            else:
+                # Align component sizes within this input file
+                names = [c.name or c.id for c in comps]
+                max_name_len = max((len(n) for n in names), default=0)
+                sizes = [str(c.size or 0) for c in comps]
+                max_size_width = max((len(s) for s in sizes), default=0)
+
+                for comp, name, size_str in zip(comps, names, sizes):
+                    lines.append(
+                        f"- {name.ljust(max_name_len)}  (size: {size_str.rjust(max_size_width)})\n"
+                    )
+            lines.append("\n")
+
+        # Create output directory if it doesn't exist
+        output_dir = os.path.dirname(output_path)
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+
+        with open(output_path, "w", encoding="utf-8") as fh:
+            fh.writelines(lines)
 
     # ---------
     # Internals
@@ -167,14 +221,26 @@ class LinkInfoParser:
 # =========================
 if __name__ == "__main__":
     parser = LinkInfoParser(
-        "example_files/dpl_demo_release_linkinfo.xml", filter_debug=True
+        "example_files/enet_cli_debug_linkinfo.xml", filter_debug=True
     )
     parser.parse()
 
+    # Example: print sorted input files by total size
+    # sorted_files = parser.get_sorted_input_files()
+    # for input_file in sorted_files:
+    #     print(
+    #         f"{input_file.name}: {len(input_file.object_components)} components (total size: {input_file.get_total_size()} bytes)"
+    #     )
+    #     for comp in input_file.get_sorted_components():
+    #         print(f"  - {comp.name} (size: {comp.size})")
+
+    # Export to markdown file
+    parser.export_sorted_input_files_markdown("outputs/input_files.md")
+
     # Example: list components per input file
-    for input_file in parser.input_files.values():
-        print(
-            f"{input_file.name}: {len(input_file.object_components)} components (total size: {input_file.get_total_size()} bytes)"
-        )
-        for comp in input_file.get_sorted_components():
-            print(f"  - {comp.name} (size: {comp.size})")
+    # for input_file in parser.input_files.values():
+    #     print(
+    #         f"{input_file.name}: {len(input_file.object_components)} components (total size: {input_file.get_total_size()} bytes)"
+    #     )
+    #     for comp in input_file.get_sorted_components():
+    #         print(f"  - {comp.name} (size: {comp.size})")
