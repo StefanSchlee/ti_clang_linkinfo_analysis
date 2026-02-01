@@ -11,6 +11,9 @@
   - Next Level: Input Files
   - Next Level: Components
 
+- Semantic subGroups
+  - with manually filters?
+
 - Präsentation
   - Bisherige Analysen
     - Incrementelle Analyse per Pull-Request und Total size plot

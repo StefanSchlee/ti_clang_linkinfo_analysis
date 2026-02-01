@@ -46,7 +46,7 @@ class LinkInfoGraphBuilder:
             details = data["details"]
 
             tooltip_lines = [f"{s}  →  {d}  ({t})" for s, d, t in details]
-            tooltip = "<br>".join(tooltip_lines)
+            tooltip = "\n".join(tooltip_lines)
 
             net.add_edge(
                 src,
@@ -76,11 +76,19 @@ class LinkInfoGraphBuilder:
                 size=total_size,
             )
 
+        # Calculate size of pseudo node (components without input file)
+        pseudo_node_size = sum(
+            comp.size or 0
+            for comp in self.parser.object_components.values()
+            if comp.input_file is None
+        )
+
         # Pseudo node for components without input file
+        pseudo_node_label = f"{PSEUDO_NODE_LABEL}\n{pseudo_node_size} bytes"
         self.graph.add_node(
             PSEUDO_NODE_ID,
-            label=PSEUDO_NODE_LABEL,
-            size=1,
+            label=pseudo_node_label,
+            size=pseudo_node_size if pseudo_node_size > 0 else 1,
         )
 
     # -------------------------------------------------------------
