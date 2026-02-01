@@ -58,17 +58,17 @@ class LinkInfoParser:
         self.input_files: Dict[str, InputFile] = {}
         self.object_components: Dict[str, ObjectComponent] = {}
 
-    # ---------
-    # Public API
-    # ---------
-
-    def parse(self) -> None:
+        # Parse XML directly in constructor
         tree = ET.parse(self.xml_path)
         root = tree.getroot()
 
         self._parse_input_files(root)
         self._parse_object_components(root)
         self._resolve_cross_references()
+
+    # ---------
+    # Public API
+    # ---------
 
     def get_sorted_input_files(self) -> List[InputFile]:
         """Returns input files sorted by total_size in descending order."""
@@ -83,15 +83,52 @@ class LinkInfoParser:
 
         # Input Files (sorted by total size)
 
+        ## Components without Input File (total size: X bytes)
+
+        - <component_name> (size: Y)
+        - ...
+
         ## <input_name> (N components, total size: X bytes)
 
         - <component_name> (size: Y)
         - ...
         """
         lines: List[str] = []
-        total_all_inputs = sum(f.get_total_size() for f in self.input_files.values())
-        lines.append(f"# Input Files ({len(self.input_files)}, sorted by total size)\n")
-        lines.append(f"**Total size (all input files): {total_all_inputs} bytes**\n\n")
+        lines.append(
+            f"# Input Files ({len(self.input_files)}, sorted by total size)\n\n"
+        )
+
+        # Calculate total size of all components
+        total_all_components = sum(c.size or 0 for c in self.object_components.values())
+        lines.append(
+            f"**Total size (all components): {total_all_components} bytes**\n\n"
+        )
+
+        # Find components without an input file first
+        components_without_input = [
+            comp for comp in self.object_components.values() if comp.input_file is None
+        ]
+
+        # Print section for components without input file at the top
+        if components_without_input:
+            sorted_comps = sorted(
+                components_without_input, key=lambda x: x.size or 0, reverse=True
+            )
+            total_size_no_input = sum(c.size or 0 for c in sorted_comps)
+            lines.append(
+                f"## Components without Input File (total size: {total_size_no_input} bytes)\n\n"
+            )
+
+            names = [c.name or c.id for c in sorted_comps]
+            max_name_len = max((len(n) for n in names), default=0)
+            sizes = [str(c.size or 0) for c in sorted_comps]
+            max_size_width = max((len(s) for s in sizes), default=0)
+
+            for comp, name, size_str in zip(sorted_comps, names, sizes):
+                lines.append(
+                    f"- {name.ljust(max_name_len)}  (size: {size_str.rjust(max_size_width)})\n"
+                )
+            lines.append("\n")
 
         for input_file in self.get_sorted_input_files():
             lines.append(
@@ -221,9 +258,8 @@ class LinkInfoParser:
 # =========================
 if __name__ == "__main__":
     parser = LinkInfoParser(
-        "example_files/enet_cli_debug_linkinfo.xml", filter_debug=True
+        "example_files/dpl_demo_release_linkinfo.xml", filter_debug=True
     )
-    parser.parse()
 
     # Example: print sorted input files by total size
     # sorted_files = parser.get_sorted_input_files()

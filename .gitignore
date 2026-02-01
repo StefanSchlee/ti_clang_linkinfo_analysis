@@ -1,3 +1,4 @@
 ollama.env
 __pycache__
 outputs/
+lib/
