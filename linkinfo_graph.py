@@ -1,6 +1,6 @@
 # linkinfo_graph.py
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import networkx as nx
 from pyvis.network import Network
 
@@ -10,6 +10,18 @@ from linkinfo_parser import LinkInfoParser, ObjectComponent
 
 PSEUDO_NODE_ID = "__LINKER_GENERATED__"
 PSEUDO_NODE_LABEL = "LINKER_GENERATED"
+
+
+# Small helper classes so callers can do `net.options.nodes.scaling.max = 50`
+class ScalingOptions:
+    def __init__(self):
+        self.min = 10
+        self.max = 30
+
+
+class NodeOptions:
+    def __init__(self, scaling: Optional[ScalingOptions] = None):
+        self.scaling = scaling or ScalingOptions()
 
 
 class LinkInfoGraphBuilder:
@@ -34,11 +46,12 @@ class LinkInfoGraphBuilder:
 
         # Nodes
         for node_id, data in self.graph.nodes(data=True):
+            tooltip = self._generate_node_tooltip(node_id)
             net.add_node(
                 node_id,
                 label=data["label"],
                 value=data["size"],  # controls node size
-                title=data["label"],
+                title=tooltip,
             )
 
         # Edges
@@ -55,6 +68,25 @@ class LinkInfoGraphBuilder:
                 arrows="to",
             )
 
+        # ensure `net.options.nodes.scaling` exists so assignment works
+        net.options.nodes = NodeOptions()
+        # set node min/max size
+        net.options.nodes.scaling.max = 100
+
+        # set physics options
+        net.options.physics.use_barnes_hut(
+            {
+                "gravity": -2000,
+                "central_gravity": 0.3,
+                "spring_length": 200,
+                "spring_strength": 0.04,
+                "damping": 0.3,
+                "overlap": 0.5,
+            }
+        )
+
+        # Show physics control panel
+        net.show_buttons(filter_=["physics"])
         net.show(output_html, notebook=False)
 
     # Optional: for Gephi
@@ -64,6 +96,43 @@ class LinkInfoGraphBuilder:
     # -------------------------------------------------------------
     # Internals
     # -------------------------------------------------------------
+
+    def _generate_node_tooltip(self, node_id: str) -> str:
+        """Generate a detailed tooltip showing all components in a node."""
+        lines = []
+        comps = []
+
+        if node_id == PSEUDO_NODE_ID:
+            # Components without input file
+            components = [
+                comp
+                for comp in self.parser.object_components.values()
+                if comp.input_file is None
+            ]
+            comps = sorted(components, key=lambda x: x.size or 0, reverse=True)
+            lines.append(PSEUDO_NODE_LABEL)
+        else:
+            # Regular input file
+            input_file = self.parser.input_files.get(node_id)
+            if input_file is None:
+                return node_id
+
+            lines.append(input_file.name or input_file.id)
+            if input_file.path:
+                lines.append(f"Path: {input_file.path}\n")
+
+            comps = input_file.get_sorted_components()
+
+        # Common component listing
+        if comps:
+            for comp in comps:
+                name = comp.name or comp.id
+                size = comp.size or 0
+                lines.append(f"{name}  (size: {size})")
+        else:
+            lines.append("No components")
+
+        return "\n".join(lines)
 
     def _add_nodes(self) -> None:
         for input_file in self.parser.input_files.values():
