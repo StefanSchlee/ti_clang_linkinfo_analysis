@@ -211,7 +211,7 @@ class LinkInfoGraphBuilder:
 
 if __name__ == "__main__":
     parser = LinkInfoParser(
-        "example_files/dpl_demo_release_linkinfo.xml", filter_debug=True
+        "example_files/enet_cli_debug_linkinfo.xml", filter_debug=True
     )
 
     builder = LinkInfoGraphBuilder(parser)

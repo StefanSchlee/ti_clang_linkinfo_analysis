@@ -46,6 +46,41 @@ class ObjectComponent:
     refd_rw_sections: List[str] = field(default_factory=list)
 
 
+# Additional dataclasses
+@dataclass
+class LogicalGroup:
+    id: str
+    name: Optional[str] = None
+    size: Optional[int] = None
+    object_components: List[ObjectComponent] = field(default_factory=list)
+    logical_groups: List["LogicalGroup"] = field(default_factory=list)
+
+    def add_object_component(self, comp: ObjectComponent) -> None:
+        self.object_components.append(comp)
+
+    def add_logical_group(self, lg: "LogicalGroup") -> None:
+        self.logical_groups.append(lg)
+
+
+@dataclass
+class MemoryUsage:
+    kind: str  # 'allocated' or 'available'
+    start_address: Optional[int] = None
+    size: Optional[int] = None
+    logical_group: Optional["LogicalGroup"] = None
+
+
+@dataclass
+class MemoryArea:
+    name: Optional[str] = None
+    length: Optional[int] = None
+    used_space: Optional[int] = None
+    usage_details: List[MemoryUsage] = field(default_factory=list)
+
+    def add_usage(self, usage: MemoryUsage) -> None:
+        self.usage_details.append(usage)
+
+
 # =========================
 # Parser
 # =========================
@@ -57,6 +92,9 @@ class LinkInfoParser:
         self.filter_debug = filter_debug
         self.input_files: Dict[str, InputFile] = {}
         self.object_components: Dict[str, ObjectComponent] = {}
+        self.logical_groups: Dict[str, LogicalGroup] = {}
+        self.memory_areas: Dict[str, MemoryArea] = {}
+        self.filtered_component_ids: set = set()
 
         # Parse XML directly in constructor
         tree = ET.parse(self.xml_path)
@@ -64,6 +102,8 @@ class LinkInfoParser:
 
         self._parse_input_files(root)
         self._parse_object_components(root)
+        self._parse_logical_groups(root)
+        self._parse_placement_map(root)
         self._resolve_cross_references()
 
     # ---------
@@ -160,6 +200,103 @@ class LinkInfoParser:
         with open(output_path, "w", encoding="utf-8") as fh:
             fh.writelines(lines)
 
+    def export_memory_areas_hierarchy_markdown(self, output_path: str) -> None:
+        """Write memory areas with hierarchical logical groups and components to Markdown.
+
+        Structure:
+        # Memory Areas
+
+        ## <memory_area_name> (length: X bytes, used: Y bytes)
+
+        ### <logical_group_name> (size: Z bytes)
+        - <object_component> (size: A bytes)
+        - <nested_logical_group> (size: B bytes)
+          - <object_component> (size: C bytes)
+        """
+        lines: List[str] = []
+        lines.append("# Memory Areas\n\n")
+
+        for mem_area in self.memory_areas.values():
+            if mem_area.name:
+                length_str = (
+                    f"{mem_area.length:,}" if mem_area.length is not None else "?"
+                )
+                used_str = (
+                    f"{mem_area.used_space:,}"
+                    if mem_area.used_space is not None
+                    else "?"
+                )
+                lines.append(
+                    f"## {mem_area.name} (length: {length_str} bytes, used: {used_str} bytes)\n\n"
+                )
+
+                # Process allocated spaces and their logical groups
+                for usage in mem_area.usage_details:
+                    if usage.kind == "allocated" and usage.logical_group:
+                        lg = usage.logical_group
+                        self._append_logical_group_hierarchy(lg, lines, level=3)
+
+                lines.append("\n")
+
+        # Create output directory if it doesn't exist
+        output_dir = os.path.dirname(output_path)
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+
+        with open(output_path, "w", encoding="utf-8") as fh:
+            fh.writelines(lines)
+
+    def _append_logical_group_hierarchy(
+        self, lg: LogicalGroup, lines: List[str], level: int, indent: str = ""
+    ) -> None:
+        """Recursively append logical group hierarchy to lines."""
+        heading = "#" * level
+        size_str = f"{lg.size:,}" if lg.size is not None else "?"
+        lines.append(f"{indent}{heading} {lg.name or lg.id} (size: {size_str} bytes)\n")
+
+        # Group object components by input file
+        comps_by_input_file: Dict[str, List[ObjectComponent]] = {}
+
+        for comp in lg.object_components:
+            # Use special name for components without input file
+            input_file_name = (
+                comp.input_file.name or comp.input_file.id
+                if comp.input_file
+                else "(no input file)"
+            )
+            if input_file_name not in comps_by_input_file:
+                comps_by_input_file[input_file_name] = []
+            comps_by_input_file[input_file_name].append(comp)
+
+        # sort input files groups by their size descending
+        comps_by_input_file = dict(
+            sorted(
+                comps_by_input_file.items(),
+                key=lambda item: sum(c.size or 0 for c in item[1]),
+                reverse=True,
+            )
+        )
+
+        # Append components grouped by input file
+        for input_file_name in comps_by_input_file.keys():
+            comps = comps_by_input_file[input_file_name]
+            total_size = sum(c.size or 0 for c in comps)
+            total_size_str = f"{total_size:,}" if total_size else "0"
+            lines.append(
+                f"{indent}- **{input_file_name}** ({len(comps)} components, total: {total_size_str} bytes)\n"
+            )
+            for comp in sorted(comps, key=lambda c: c.size or 0, reverse=True):
+                comp_name = comp.name or comp.id
+                comp_size = f"{comp.size:,}" if comp.size is not None else "?"
+                lines.append(f"{indent}  - {comp_name} (size: {comp_size} bytes)\n")
+
+        # Recursively append nested logical groups
+        for sub_lg in lg.logical_groups:
+            # Recurse with deeper indentation (heading will be added by recursion)
+            self._append_logical_group_hierarchy(
+                sub_lg, lines, level + 1, indent + "  "
+            )
+
     # ---------
     # Internals
     # ---------
@@ -220,9 +357,77 @@ class LinkInfoParser:
 
             # Filter out .debug_ components if enabled
             if self.filter_debug and oc.name and oc.name.startswith(".debug_"):
+                self.filtered_component_ids.add(oc_id)
                 continue
 
             self.object_components[oc_id] = oc
+
+    def _parse_logical_groups(self, root: ET.Element) -> None:
+        lg_list = root.find("logical_group_list")
+        if lg_list is None:
+            return
+
+        for elem in lg_list.findall("logical_group"):
+            lg_id = elem.attrib.get("id")
+            if not lg_id:
+                continue
+
+            lg = LogicalGroup(
+                id=lg_id,
+                name=self._get_text(elem, "name"),
+                size=self._get_hex(elem, "size"),
+            )
+
+            contents = elem.find("contents")
+            if contents is not None:
+                for ref in contents.findall("object_component_ref"):
+                    idref = ref.attrib.get("idref")
+                    if idref:
+                        placeholder = ObjectComponent(id=idref)
+                        lg.object_components.append(placeholder)
+                for ref in contents.findall("logical_group_ref"):
+                    idref = ref.attrib.get("idref")
+                    if idref:
+                        # Store the id as a string; will resolve later
+                        lg.logical_groups.append(idref)
+
+            self.logical_groups[lg_id] = lg
+
+    def _parse_placement_map(self, root: ET.Element) -> None:
+        placement = root.find("placement_map")
+        if placement is None:
+            return
+
+        for ma in placement.findall("memory_area"):
+            name = self._get_text(ma, "name")
+            length = self._get_hex(ma, "length")
+            used_space = self._get_hex(ma, "used_space")
+
+            mem = MemoryArea(name=name, length=length, used_space=used_space)
+
+            usage = ma.find("usage_details")
+            if usage is not None:
+                for alloc in usage.findall("allocated_space"):
+                    mu = MemoryUsage(
+                        kind="allocated",
+                        start_address=self._get_hex(alloc, "start_address"),
+                        size=self._get_hex(alloc, "size"),
+                    )
+                    lgref = alloc.find("logical_group_ref")
+                    if lgref is not None:
+                        mu.logical_group = lgref.attrib.get("idref")
+                    mem.add_usage(mu)
+
+                for avail in usage.findall("available_space"):
+                    mu = MemoryUsage(
+                        kind="available",
+                        start_address=self._get_hex(avail, "start_address"),
+                        size=self._get_hex(avail, "size"),
+                    )
+                    mem.add_usage(mu)
+
+            key = name or f"mem-{len(self.memory_areas)+1}"
+            self.memory_areas[key] = mem
 
     def _resolve_cross_references(self) -> None:
         # Resolve object_component -> input_file
@@ -232,6 +437,47 @@ class LinkInfoParser:
                 oc.input_file = input_file
                 if input_file is not None:
                     input_file.add_component(oc)
+
+        # Resolve logical group contents (object components and nested logical groups)
+        for lg in self.logical_groups.values():
+            # Resolve object_components
+            resolved_comps: List[ObjectComponent] = []
+            for comp in lg.object_components:
+                if comp.id:
+                    if comp.id in self.object_components:
+                        resolved_comps.append(self.object_components[comp.id])
+                    elif comp.id not in self.filtered_component_ids:
+                        raise ValueError(
+                            f"LogicalGroup '{lg.id}' references unknown ObjectComponent '{comp.id}'"
+                        )
+                    # Skip components that were filtered out
+            lg.object_components = resolved_comps
+
+            # Resolve nested logical_groups
+            resolved_lgs: List[LogicalGroup] = []
+            for lg_id in lg.logical_groups:
+                if isinstance(lg_id, str):
+                    sub_lg = self.logical_groups.get(lg_id)
+                    if sub_lg is None:
+                        raise ValueError(
+                            f"LogicalGroup '{lg.id}' references unknown LogicalGroup '{lg_id}'"
+                        )
+                    resolved_lgs.append(sub_lg)
+                else:
+                    # Already resolved
+                    resolved_lgs.append(lg_id)
+            lg.logical_groups = resolved_lgs
+
+        # Resolve memory usage logical_group refs
+        for mem_key, mem in self.memory_areas.items():
+            for usage in mem.usage_details:
+                if isinstance(usage.logical_group, str):
+                    lg = self.logical_groups.get(usage.logical_group)
+                    if lg is None:
+                        raise ValueError(
+                            f"MemoryArea '{mem_key}' has usage referencing unknown LogicalGroup '{usage.logical_group}'"
+                        )
+                    usage.logical_group = lg
 
     # ---------
     # Helpers
@@ -261,22 +507,6 @@ if __name__ == "__main__":
         "example_files/dpl_demo_release_linkinfo.xml", filter_debug=True
     )
 
-    # Example: print sorted input files by total size
-    # sorted_files = parser.get_sorted_input_files()
-    # for input_file in sorted_files:
-    #     print(
-    #         f"{input_file.name}: {len(input_file.object_components)} components (total size: {input_file.get_total_size()} bytes)"
-    #     )
-    #     for comp in input_file.get_sorted_components():
-    #         print(f"  - {comp.name} (size: {comp.size})")
-
     # Export to markdown file
     parser.export_sorted_input_files_markdown("outputs/input_files.md")
-
-    # Example: list components per input file
-    # for input_file in parser.input_files.values():
-    #     print(
-    #         f"{input_file.name}: {len(input_file.object_components)} components (total size: {input_file.get_total_size()} bytes)"
-    #     )
-    #     for comp in input_file.get_sorted_components():
-    #         print(f"  - {comp.name} (size: {comp.size})")
+    parser.export_memory_areas_hierarchy_markdown("outputs/memory_areas.md")
