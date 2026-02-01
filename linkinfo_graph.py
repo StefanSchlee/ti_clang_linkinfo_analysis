@@ -71,7 +71,7 @@ class LinkInfoGraphBuilder:
         # ensure `net.options.nodes.scaling` exists so assignment works
         net.options.nodes = NodeOptions()
         # set node min/max size
-        net.options.nodes.scaling.max = 100
+        net.options.nodes.scaling.max = 60
 
         # set physics options
         net.options.physics.use_barnes_hut(
