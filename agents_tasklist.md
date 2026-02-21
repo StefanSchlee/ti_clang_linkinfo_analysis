@@ -3,19 +3,12 @@
 Legend: `[ ]` open, `[x]` done  
 Rule: fully done tasks will be removed over time.
 
-## WP-01 Project baseline and packaging (Req-1, Req-3)
-- [ ] Create package layout (`src/ti_clang_linkinfo_analysis/`) and move current modules into package-ready structure (keep behavior unchanged).
-- [ ] Add `pyproject.toml` (PEP 621 metadata, build-system, dependencies, optional dev dependencies) with Python constraint `>=3.10`.
-- [ ] Add minimal package files (`__init__.py`, version strategy, public exports).
-- [ ] Add editable install + wheel/sdist validation checks.
-- [ ] Add `.gitignore` cleanup for Python packaging/test artifacts if needed.
-
 ## WP-02 Public API frontend design (Req-2, Req-3, Req-10)
-- [ ] Define central facade class (working name: `LinkInfoAnalyzer`) constructed with XML path.
-- [ ] Specify API surface of analysis methods (markdown, icicle, graph) with stable method signatures.
-- [ ] Enforce mandatory `output_path` argument for all file-writing analyses.
-- [ ] Keep parser/internal domain models non-public (or semi-public) and document boundaries.
-- [ ] Add deprecation/compatibility strategy for existing direct class usage.
+- [x] Define central facade class (working name: `LinkInfoAnalyzer`) constructed with XML path.
+- [x] Specify API surface of analysis methods (markdown, icicle, graph) with stable method signatures.
+- [x] Enforce mandatory `output_path` argument for all file-writing analyses.
+- [x] Keep parser/internal domain models non-public (or semi-public) and document boundaries.
+- [x] Add deprecation/compatibility strategy for existing direct class usage.
 
 ## WP-03 Parser/domain refactor foundation (Req-2, Req-3)
 - [ ] Extract parser into dedicated internal module(s): XML parsing, model mapping, cross-reference resolution.
@@ -56,11 +49,12 @@ Rule: fully done tasks will be removed over time.
 - [ ] If HTML output is requested, enforce mandatory output-path argument.
 
 ## WP-08 Testing architecture and coverage (Req-4)
-- [ ] Create `tests/` with parser/domain/API/analysis split.
-- [ ] Add fixtures for `example_files/*debug*` linkinfo inputs.
-- [ ] Add regression tests for current implemented behavior before refactor changes.
-- [ ] Add unit/integration tests for markdown, icicle, and graph config variants.
-- [ ] Add coverage tooling and threshold reporting (pytest-cov).
+- [x] Create `tests/` with parser/domain/API/analysis split.
+- [x] Add fixtures for `example_files/*debug*` linkinfo inputs.
+- [x] Add regression tests for current implemented behavior before refactor changes.
+- [x] Add unit/integration tests for markdown export.
+- [ ] Add unit/integration tests for icicle and graph config variants (graph tests deferred until graph feature work).
+- [x] Add coverage tooling and threshold reporting (pytest-cov).
 
 ## WP-09 Documentation and developer workflow (Req-1, Req-2, Req-4, Req-9)
 - [ ] Add README with installation, quickstart, and API examples.
@@ -74,5 +68,5 @@ Rule: fully done tasks will be removed over time.
 - [ ] Define versioning milestone for first refactored release.
 
 ## Execution order proposal (commit-sized increments)
-1. WP-01 -> 2) WP-08 (baseline regression tests) -> 3) WP-02 -> 4) WP-03 -> 5) WP-04 -> 6) WP-05 -> 7) WP-06 -> 8) WP-07 -> 9) WP-09 -> 10) WP-10
+1. WP-08 (baseline regression tests) -> 2) WP-02 -> 3) WP-03 -> 4) WP-04 -> 5) WP-05 (markdown) -> 6) WP-07 (icicle) -> 7) WP-06 (graph) -> 8) WP-09 -> 9) WP-10
 
