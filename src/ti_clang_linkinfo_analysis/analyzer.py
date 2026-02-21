@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .linkinfo_parser import LinkInfoParser
+from ._markdown import (
+    export_memory_areas_hierarchy_markdown,
+    export_sorted_input_files_markdown,
+)
+from ._xml_parser import LinkInfoXmlParser
 from .linkinfo_graph import LinkInfoGraphBuilder
 
 
@@ -14,12 +18,12 @@ class LinkInfoAnalyzer:
     """
 
     def __init__(self, xml_path: str, *, filter_debug: bool = False) -> None:
-        self._parser = LinkInfoParser(xml_path, filter_debug=filter_debug)
+        self._data = LinkInfoXmlParser(xml_path, filter_debug=filter_debug).parse()
 
     @property
-    def parser(self) -> LinkInfoParser:
-        """Access to the underlying parser (semi-public, subject to change)."""
-        return self._parser
+    def issues(self):
+        """Parsing issues detected while building the model."""
+        return self._data.issues
 
     # -----------------
     # Markdown analyses
@@ -27,11 +31,11 @@ class LinkInfoAnalyzer:
 
     def export_sorted_input_files_markdown(self, output_path: str) -> None:
         """Export input-file → object-component hierarchy markdown."""
-        self._parser.export_sorted_input_files_markdown(output_path)
+        export_sorted_input_files_markdown(self._data, output_path)
 
     def export_memory_areas_hierarchy_markdown(self, output_path: str) -> None:
         """Export memory-area → logical-group → input-file hierarchy markdown."""
-        self._parser.export_memory_areas_hierarchy_markdown(output_path)
+        export_memory_areas_hierarchy_markdown(self._data, output_path)
 
     # -----------------
     # Graph analyses
@@ -39,13 +43,13 @@ class LinkInfoAnalyzer:
 
     def export_inputfile_graph_pyvis(self, output_path: str) -> None:
         """Export the input-file level graph as a pyvis HTML file."""
-        builder = LinkInfoGraphBuilder(self._parser)
+        builder = LinkInfoGraphBuilder(self._data)
         builder.build_graph()
         builder.export_pyvis(output_path)
 
     def export_inputfile_graph_graphml(self, output_path: str) -> None:
         """Export the input-file level graph as GraphML."""
-        builder = LinkInfoGraphBuilder(self._parser)
+        builder = LinkInfoGraphBuilder(self._data)
         builder.build_graph()
         builder.export_graphml(output_path)
 

@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple, Optional
 import networkx as nx
 from pyvis.network import Network
 
-from .linkinfo_parser import LinkInfoParser, ObjectComponent
+from ._models import LinkInfoData, ObjectComponent
 
 
 PSEUDO_NODE_ID = "__LINKER_GENERATED__"
@@ -22,8 +22,8 @@ class NodeOptions:
 
 
 class LinkInfoGraphBuilder:
-    def __init__(self, parser: LinkInfoParser):
-        self.parser = parser
+    def __init__(self, data: LinkInfoData):
+        self.data = data
         self.graph = nx.DiGraph()
 
         # (src_file_id, dst_file_id) -> list of (src_comp, dst_comp, type)
@@ -103,14 +103,14 @@ class LinkInfoGraphBuilder:
             # Components without input file
             components = [
                 comp
-                for comp in self.parser.object_components.values()
+                for comp in self.data.object_components.values()
                 if comp.input_file is None
             ]
             comps = sorted(components, key=lambda x: x.size or 0, reverse=True)
             lines.append(PSEUDO_NODE_LABEL)
         else:
             # Regular input file
-            input_file = self.parser.input_files.get(node_id)
+            input_file = self.data.input_files.get(node_id)
             if input_file is None:
                 return node_id
 
@@ -132,7 +132,7 @@ class LinkInfoGraphBuilder:
         return "\n".join(lines)
 
     def _add_nodes(self) -> None:
-        for input_file in self.parser.input_files.values():
+        for input_file in self.data.input_files.values():
             total_size = input_file.get_total_size()
             label = f"{input_file.name}\n{total_size} bytes"
 
@@ -145,7 +145,7 @@ class LinkInfoGraphBuilder:
         # Calculate size of pseudo node (components without input file)
         pseudo_node_size = sum(
             comp.size or 0
-            for comp in self.parser.object_components.values()
+            for comp in self.data.object_components.values()
             if comp.input_file is None
         )
 
@@ -167,7 +167,7 @@ class LinkInfoGraphBuilder:
     # -------------------------------------------------------------
 
     def _process_component_references(self) -> None:
-        for comp in self.parser.object_components.values():
+        for comp in self.data.object_components.values():
             src_file_id = self._get_inputfile_id(comp)
 
             refs = []
@@ -175,7 +175,7 @@ class LinkInfoGraphBuilder:
             refs.extend((r, "RW") for r in comp.refd_rw_sections)
 
             for ref_id, ref_type in refs:
-                target_comp = self.parser.object_components.get(ref_id)
+                target_comp = self.data.object_components.get(ref_id)
                 if target_comp is None:
                     # debug or filtered component → ignore
                     continue

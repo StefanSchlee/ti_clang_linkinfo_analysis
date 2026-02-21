@@ -18,7 +18,7 @@
 3. I want a code coverage report
 
 # Req-5: Analysis with markdown output
-Hint: This feature is already partly implemented in the "linkinfo_parser.py"
+Hint: This feature is already partly implemented in the internal markdown exporter.
 1. This set of analysis outputs the linker data in a structured, hierarchical markdown file
 2. On each hierachical level, i generally want to sort the items in descending byte size
 3. Each item should show its accumulated byte size

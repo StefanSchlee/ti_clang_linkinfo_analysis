@@ -11,10 +11,10 @@ Rule: fully done tasks will be removed over time.
 - [x] Add deprecation/compatibility strategy for existing direct class usage.
 
 ## WP-03 Parser/domain refactor foundation (Req-2, Req-3)
-- [ ] Extract parser into dedicated internal module(s): XML parsing, model mapping, cross-reference resolution.
-- [ ] Normalize/validate domain dataclasses (typing consistency, IDs, optionality, computed size helpers).
-- [ ] Add robust error model for malformed/missing references.
-- [ ] Preserve debug-filter behavior and make it configurable through facade.
+- [x] Extract parser into dedicated internal module(s): XML parsing, model mapping, cross-reference resolution.
+- [x] Normalize/validate domain dataclasses (typing consistency, IDs, optionality, computed size helpers).
+- [x] Add robust error model for malformed/missing references.
+- [x] Preserve debug-filter behavior and make it configurable through facade.
 
 ## WP-04 Input-file folder hierarchy model (Req-6)
 - [ ] Implement path normalization (POSIX/Windows separators, absolute/relative handling).
