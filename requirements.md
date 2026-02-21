@@ -1,7 +1,7 @@
 # Req-1: Project Structure
 1. The package should be installable with pip
 2. It should support local installs, editable installs (pip install -e), as well as later i want to publish it on pypi
-3. I want a pytoml style project
+3. I want a pyproject.toml style project, for python version >=3.10
 
 # Req-2: Publicly API Frontend
 1. I want one central class, which gets constructed with a path to an linkinfo.xml file.
@@ -36,6 +36,7 @@ Hint: This feature is already partly implemented in the "linkinfo_parser.py"
 3. If a folder has only one subfolder, it can be grouped together to form one icicle section
 4. The size of each section is based on the byte size of the respective folder (accumulated subfolders/inputfiles), input-file, object-component
 5. I want the plot to be vertically: The highest level should be at the bottom.
+6. The functions should be configured to show interactive figure or html if desired
 
 # Req-8: Graph-based Analysis
 1. Using networkx and pyvis.network packages we can do graph visualisations
@@ -50,3 +51,12 @@ Hint: This feature is already partly implemented in the "linkinfo_parser.py"
    1. All input-files which belong to one of these folders, are removed as nodes and added to these folder nodes
    2. The folder nodes size are equal to the sum of the input files belonging to
    3. The edges between the folder nodes and other folder/inputfile-nodes should also be found by analysing all links of the underlying input files
+
+# Req-9: Documentation
+1. Use simple documentation for internal code for me to understand stuff
+   1. Also add an internal architecture documentation file to give an overview of the architecture
+2. For user documentation, create a main readme which shows all required information: installation, exemplary usage, and more detailed explanation of all features
+3. Update the documentation along the road
+
+# Req-10: Output Style
+1. Analysis which output a file, should expect an output file path argument, which must be mandatory
