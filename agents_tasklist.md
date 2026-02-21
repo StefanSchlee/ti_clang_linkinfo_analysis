@@ -17,10 +17,10 @@ Rule: fully done tasks will be removed over time.
 - [x] Preserve debug-filter behavior and make it configurable through facade.
 
 ## WP-04 Input-file folder hierarchy model (Req-6)
-- [ ] Implement path normalization (POSIX/Windows separators, absolute/relative handling).
-- [ ] Build reusable folder tree representation from `input_file.path`.
-- [ ] Add accumulation helpers for folder/input file/object component byte sizes.
-- [ ] Add optional path compaction (single-child folder chain collapse) for visual analyses.
+- [x] Implement path normalization (POSIX/Windows separators, absolute/relative handling).
+- [x] Build reusable folder tree representation from `input_file.path`.
+- [x] Add accumulation helpers for folder/input file/object component byte sizes.
+- [x] Add optional path compaction (single-child folder chain collapse) for visual analyses.
 
 ## WP-05 Unified markdown analysis API (Req-5, Req-2, Req-10)
 - [ ] Define configurable markdown exporter interface (single API with hierarchy options).

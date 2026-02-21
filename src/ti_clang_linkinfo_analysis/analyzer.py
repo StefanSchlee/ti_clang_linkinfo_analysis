@@ -6,6 +6,7 @@ from ._markdown import (
     export_memory_areas_hierarchy_markdown,
     export_sorted_input_files_markdown,
 )
+from ._models import FolderNode
 from ._xml_parser import LinkInfoXmlParser
 from .linkinfo_graph import LinkInfoGraphBuilder
 
@@ -24,6 +25,23 @@ class LinkInfoAnalyzer:
     def issues(self):
         """Parsing issues detected while building the model."""
         return self._data.issues
+
+    @property
+    def folder_hierarchy(self) -> FolderNode:
+        """Get the input-file folder hierarchy.
+
+        Returns:
+            Root FolderNode representing the folder structure of input files.
+            Provides hierarchical grouping by source path for all analyses.
+        """
+        if self._data.folder_hierarchy is None:
+            # Fallback: build on-demand (shouldn't happen with current parser)
+            from ._folder_hierarchy import FolderHierarchy
+
+            self._data.folder_hierarchy = FolderHierarchy.from_linkinfo_data(
+                self._data, compact=False
+            )
+        return self._data.folder_hierarchy
 
     # -----------------
     # Markdown analyses

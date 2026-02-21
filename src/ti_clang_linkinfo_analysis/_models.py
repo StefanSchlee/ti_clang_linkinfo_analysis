@@ -78,6 +78,46 @@ class MemoryArea:
 
 
 @dataclass
+class FolderNode:
+    """Represents a folder in the input-file hierarchy.
+
+    Attributes:
+        name: Folder name (last component of path).
+        path: Normalized folder path (forward slashes).
+        children: Child FolderNodes (subfolders).
+        input_files: InputFiles directly in this folder.
+        _accumulated_size: Cached accumulated size (computed lazily).
+    """
+
+    name: str
+    path: str
+    children: Dict[str, "FolderNode"] = field(default_factory=dict)
+    input_files: Dict[str, InputFile] = field(default_factory=dict)
+    _accumulated_size: Optional[int] = field(default=None, init=False, repr=False)
+
+    def get_accumulated_size(self) -> int:
+        """Get total size of all object components in this folder and subfolders.
+
+        Returns:
+            Sum of sizes from all input files and their components recursively.
+        """
+        if self._accumulated_size is None:
+            size = 0
+            # Add sizes from input files in this folder
+            for input_file in self.input_files.values():
+                size += input_file.get_total_size()
+            # Add sizes from child folders
+            for child in self.children.values():
+                size += child.get_accumulated_size()
+            self._accumulated_size = size
+        return self._accumulated_size
+
+    def invalidate_size_cache(self) -> None:
+        """Invalidate accumulated size cache after structural changes."""
+        self._accumulated_size = None
+
+
+@dataclass
 class LinkInfoData:
     input_files: Dict[str, InputFile] = field(default_factory=dict)
     object_components: Dict[str, ObjectComponent] = field(default_factory=dict)
@@ -85,3 +125,4 @@ class LinkInfoData:
     memory_areas: Dict[str, MemoryArea] = field(default_factory=dict)
     filtered_component_ids: set[str] = field(default_factory=set)
     issues: List[LinkInfoIssue] = field(default_factory=list)
+    folder_hierarchy: Optional["FolderNode"] = field(default=None)

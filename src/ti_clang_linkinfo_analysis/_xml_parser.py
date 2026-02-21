@@ -4,6 +4,7 @@ from typing import Optional
 import xml.etree.ElementTree as ET
 
 from ._errors import LinkInfoIssue, LinkInfoParseError
+from ._folder_hierarchy import FolderHierarchy
 from ._models import (
     InputFile,
     LinkInfoData,
@@ -33,6 +34,9 @@ class LinkInfoXmlParser:
         self._parse_logical_groups(root, data)
         self._parse_placement_map(root, data)
         self._resolve_cross_references(data)
+
+        # Build folder hierarchy from input files
+        data.folder_hierarchy = FolderHierarchy.from_linkinfo_data(data, compact=False)
 
         return data
 
@@ -178,7 +182,11 @@ class LinkInfoXmlParser:
                             },
                         )
                     )
-                comp.input_file = input_file
+                    comp.input_file = None
+                else:
+                    comp.input_file = input_file
+                    # Add component to input file
+                    input_file.add_component(comp)
 
         # 2) Resolve LogicalGroup object components and nested groups
         for lg in data.logical_groups.values():
