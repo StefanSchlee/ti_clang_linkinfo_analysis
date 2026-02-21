@@ -1,18 +1,24 @@
-- Graph View of inputfiles
-  - use NetworkX package 
-  - Nodesize should represent size
-  - Node should have labels: Name+Size
-  - directed edges between inputfiles(nodes) should be added, if any component from one inputfile references (by refd_ro_sections or refd_rw_sections) any component from another input file
-  - it should be possible by clicking/hovering an edge to check from which subcomponents the edges are originated
+- Refaktorisierung
+  - Markdown Plotting in eigenes File verschieben
+
 
 - Table view with Regions + Sections
-  - Top Level: Memory Regions
-  - Next Level: Memory Sections
-  - Next Level: Input Files
-  - Next Level: Components
+  - [ ] fix alignement
 
-- Semantic subGroups
+- Icicle Graph with plotly
+  - Use Paths as hierarchy
+    - group folder together which are not branching
+    - Parse Folder Structure in Parser
+  - use separate file for Icicle Plots
+  - one plot with only paths, files, components
+  - one plot with memory sections and then paths then files then components
+
+- Semantic FeatureGroups
+  - linking between groups similar to input files: aggregate input file links
+  - with path filters
   - with manually filters?
+  - with AI-assisted filtering
+    - muss größere Modelle Probieren
 
 - Präsentation
   - Bisherige Analysen
