@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.ti_clang_linkinfo_analysis.analyzer import LinkInfoAnalyzer
+from ti_clang_linkinfo_analysis.analyzer import LinkInfoAnalyzer
 
 
 class TestLinkInfoAnalyzerFolderHierarchy:

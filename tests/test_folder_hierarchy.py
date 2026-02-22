@@ -2,19 +2,19 @@
 
 import pytest
 
-from src.ti_clang_linkinfo_analysis._folder_hierarchy import (
+from ti_clang_linkinfo_analysis._folder_hierarchy import (
     FolderHierarchy,
     flatten_folder_hierarchy,
     get_all_input_files_in_folder,
     get_depth,
 )
-from src.ti_clang_linkinfo_analysis._models import (
+from ti_clang_linkinfo_analysis._models import (
     FolderNode,
     InputFile,
     LinkInfoData,
     ObjectComponent,
 )
-from src.ti_clang_linkinfo_analysis._path_utils import (
+from ti_clang_linkinfo_analysis._path_utils import (
     get_filename,
     get_parent_path,
     is_absolute_path,
