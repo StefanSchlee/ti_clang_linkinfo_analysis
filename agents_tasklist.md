@@ -23,14 +23,14 @@ Rule: fully done tasks will be removed over time.
 - [x] Add optional path compaction (single-child folder chain collapse) for visual analyses.
 
 ## WP-05 Unified markdown analysis API (Req-5, Req-2, Req-10)
-- [ ] Define configurable markdown exporter interface (single API with hierarchy options).
-- [ ] Re-implement existing markdown variants as configurations of one engine:
-	- [ ] input-file -> object-component
-	- [ ] memory-area -> logical-group -> input-file -> object-component
-- [ ] Enforce descending size sort on each hierarchy level.
-- [ ] Ensure each item shows accumulated byte size.
-- [ ] Keep output deterministic (stable ordering on equal sizes).
-- [ ] Ensure markdown export APIs always take explicit output file path.
+- [x] Define configurable markdown exporter interface (single API with hierarchy options).
+- [x] Re-implement existing markdown variants as configurations of one engine:
+	- [x] input-file -> object-component
+	- [x] memory-area -> logical-group -> input-file -> object-component
+- [x] Enforce descending size sort on each hierarchy level.
+- [x] Ensure each item shows accumulated byte size.
+- [x] Keep output deterministic (stable ordering on equal sizes).
+- [x] Ensure markdown export APIs always take explicit output file path.
 
 ## WP-06 Graph analysis API generalization (Req-8, Req-2, Req-6, Req-10)
 - [ ] Define graph builder configuration model (enabled node levels, filters, optional grouped folders).

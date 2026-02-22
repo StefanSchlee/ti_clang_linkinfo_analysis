@@ -2,10 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from ._markdown import (
-    export_memory_areas_hierarchy_markdown,
-    export_sorted_input_files_markdown,
-)
+from ._markdown import export_markdown
 from ._models import FolderNode
 from ._xml_parser import LinkInfoXmlParser
 from .linkinfo_graph import LinkInfoGraphBuilder
@@ -47,13 +44,22 @@ class LinkInfoAnalyzer:
     # Markdown analyses
     # -----------------
 
-    def export_sorted_input_files_markdown(self, output_path: str) -> None:
-        """Export input-file → object-component hierarchy markdown."""
-        export_sorted_input_files_markdown(self._data, output_path)
+    def export_markdown(self, output_path: str, *, hierarchy: tuple[str, ...]) -> None:
+        """Export a configurable markdown hierarchy.
 
-    def export_memory_areas_hierarchy_markdown(self, output_path: str) -> None:
-        """Export memory-area → logical-group → input-file hierarchy markdown."""
-        export_memory_areas_hierarchy_markdown(self._data, output_path)
+        Examples:
+            export_markdown(output_path, hierarchy=("input_file", "object_component"))
+            export_markdown(
+                output_path,
+                hierarchy=(
+                    "memory_area",
+                    "logical_group",
+                    "input_file",
+                    "object_component",
+                ),
+            )
+        """
+        export_markdown(self._data, output_path, hierarchy=hierarchy)
 
     # -----------------
     # Graph analyses

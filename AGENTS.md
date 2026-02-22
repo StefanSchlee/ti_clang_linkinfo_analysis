@@ -20,3 +20,6 @@ I want to create a python analysis tool for the linkinfo.xml files, which are em
   - Update the file whenever necessary, like if new tasks arose or if a task is done
 - I want you to create pytest tests, and run these after major modifications to see if all still works
 - You are allowed to refactor and restructure the whole project whenever necessary
+
+# Tools
+- Use the local .venv for calling any python commands

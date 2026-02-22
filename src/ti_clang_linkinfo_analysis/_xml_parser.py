@@ -144,21 +144,27 @@ class LinkInfoXmlParser:
 
             mem_area = MemoryArea(name=mem_name, length=length, used_space=used)
 
-            usage_list = mem.find("usage_list")
-            if usage_list is not None:
-                for usage in usage_list.findall("usage"):
+            usage_details = mem.find("usage_details")
+            if usage_details is not None:
+                for usage in list(usage_details):
                     kind = usage.attrib.get("kind")
+                    if kind is None:
+                        if usage.tag == "allocated_space":
+                            kind = "allocated"
+                        elif usage.tag == "available_space":
+                            kind = "available"
+                        else:
+                            kind = usage.tag
+
                     start_addr = self._get_hex(usage, "start_address")
                     size = self._get_hex(usage, "size")
 
                     mu = MemoryUsage(kind=kind, start_address=start_addr, size=size)
 
-                    # If there's a logical group ref
                     lref = usage.find("logical_group_ref")
                     if lref is not None:
                         lg_id = lref.attrib.get("idref")
                         if lg_id:
-                            # store the id for now
                             mu.logical_group = lg_id
 
                     mem_area.add_usage(mu)
