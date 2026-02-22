@@ -128,8 +128,8 @@ def _compact_folder_tree(node: FolderNode) -> FolderNode:
         only_child_name = next(iter(node.children.keys()))
         only_child = node.children[only_child_name]
 
-        # Merge child into parent
-        node.name = only_child.name
+        # Merge child into parent and keep compaction visible in the name
+        node.name = f"{node.name}/{only_child.name}"
         node.path = only_child.path
         node.children = only_child.children
         node.input_files = only_child.input_files

@@ -17,7 +17,7 @@ def main() -> None:
 
     output_file = output_dir / "icicle_plot.html"
     print(f"Building icicle plot...")
-    analyzer.export_icicle_plot(str(output_file), show=False)
+    analyzer.export_icicle_plot(str(output_file), show=True)
     print(f"Icicle plot written to: {output_file}")
     print("Open the HTML file in a browser to interact with the visualization.")
 
