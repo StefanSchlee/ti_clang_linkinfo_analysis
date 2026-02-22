@@ -1,17 +1,7 @@
-- Refaktorisierung
-  - Markdown Plotting in eigenes File verschieben
-
-
-- Table view with Regions + Sections
-  - [ ] fix alignement
-
-- Icicle Graph with plotly
-  - Use Paths as hierarchy
-    - group folder together which are not branching
-    - Parse Folder Structure in Parser
-  - use separate file for Icicle Plots
-  - one plot with only paths, files, components
-  - one plot with memory sections and then paths then files then components
+- license on pypi missing
+- screenshots in readme
+- in github-profile einfügen
+- glob filter für path grouping?
 
 - Semantic FeatureGroups
   - linking between groups similar to input files: aggregate input file links
