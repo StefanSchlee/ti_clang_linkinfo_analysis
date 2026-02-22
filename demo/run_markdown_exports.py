@@ -13,20 +13,9 @@ def main() -> None:
 
     analyzer = LinkInfoAnalyzer(str(xml_path), filter_debug=True)
 
-    analyzer.export_markdown(
-        str(output_dir / "input_files.md"),
-        hierarchy=("input_file", "object_component"),
-    )
+    analyzer.export_markdown(str(output_dir / "input_files.md"), mode="input_file")
 
-    analyzer.export_markdown(
-        str(output_dir / "memory_areas.md"),
-        hierarchy=(
-            "memory_area",
-            "logical_group",
-            "input_file",
-            "object_component",
-        ),
-    )
+    analyzer.export_markdown(str(output_dir / "memory_areas.md"), mode="memory_area")
 
     print(f"Wrote markdown outputs to: {output_dir}")
 

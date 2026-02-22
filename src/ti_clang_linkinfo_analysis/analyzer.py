@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal, Optional
 
 from ._markdown import export_markdown
 from ._models import FolderNode
@@ -44,22 +44,20 @@ class LinkInfoAnalyzer:
     # Markdown analyses
     # -----------------
 
-    def export_markdown(self, output_path: str, *, hierarchy: tuple[str, ...]) -> None:
+    def export_markdown(
+        self,
+        output_path: str,
+        *,
+        mode: Literal["input_file", "memory_area"] = "input_file",
+    ) -> None:
         """Export a configurable markdown hierarchy.
 
-        Examples:
-            export_markdown(output_path, hierarchy=("input_file", "object_component"))
-            export_markdown(
-                output_path,
-                hierarchy=(
-                    "memory_area",
-                    "logical_group",
-                    "input_file",
-                    "object_component",
-                ),
-            )
+        Args:
+            mode: Chooses the highest hierarchy level:
+                * "input_file" (default): top-level input files and their components.
+                * "memory_area": inserts memory areas and logical groups above the input files.
         """
-        export_markdown(self._data, output_path, hierarchy=hierarchy)
+        export_markdown(self._data, output_path, mode=mode)
 
     # -----------------
     # Graph analyses

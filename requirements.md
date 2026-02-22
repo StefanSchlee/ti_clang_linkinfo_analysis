@@ -53,10 +53,12 @@ Hint: This feature is already partly implemented in the internal markdown export
    3. The edges between the folder nodes and other folder/inputfile-nodes should also be found by analysing all links of the underlying input files
 
 # Req-9: Documentation
-1. Use simple documentation for internal code for me to understand stuff
-   1. Also add an internal architecture documentation file to give an overview of the architecture
-2. For user documentation, create a main readme which shows all required information: installation, exemplary usage, and more detailed explanation of all features
-3. Update the documentation along the road
+1. The main README.md is for everyone using this repository
+1. For user documentation, which will later be also visible on pypi, create a separate readme under "docs/" which shows all required information: installation, exemplary usage, and more detailed explanation of all features
+2. Update the documentation along the road
 
 # Req-10: Output Style
 1. Analysis which output a file, should expect an output file path argument, which must be mandatory
+
+# Req-11: Demos
+1. In the "demo/" folder, i want scripts for me to be run manually, to inspect the ouputs of the different public api functions on the example linkinfo files.
