@@ -51,9 +51,60 @@ Hint: This feature is already partly implemented in the internal markdown export
 6. Export formats: pyvis HTML (interactive) and GraphML (for external tools)
 
 # Req-9: Documentation
-1. The main README.md is for everyone using this repository
-1. For user documentation, which will later be also visible on pypi, create a separate readme under "docs/" which shows all required information: installation, exemplary usage, and more detailed explanation of all features
-2. Update the documentation along the road
+1. The main README.md is for everyone using this repository (developers, contributors)
+2. For user documentation, which will later be also visible on pypi, create a separate readme under "docs/" which shows all required information: installation, exemplary usage, and more detailed explanation of all features
+3. Update the documentation along the road
+
+## Req-9.1: User Documentation (docs/README.md)
+1. Create `docs/README.md` as the primary user-facing documentation (will be used as PyPI long_description)
+2. Must be PyPI-compatible: standalone, no relative links to repo files outside docs/, use absolute URLs for external resources
+3. Structure:
+   - **Overview**: Brief description of what the tool does and who it's for
+   - **Installation**: pip install instructions (from PyPI when available, from git URL for now)
+   - **Quick Start**: Minimal working example with explanation
+   - **Features**: Detailed explanation of each analysis type (markdown exports, graph exports, icicle plots)
+   - **API Reference**: Public API documentation (LinkInfoAnalyzer methods with parameters and examples)
+   - **Examples**: More complex usage scenarios
+   - **Release Notes**: Integrated version history with notable changes
+4. Keep examples concise but complete (full working code snippets)
+5. Explain configuration options for each analysis method
+
+## Req-9.2: Code Documentation Standards
+1. Use **Google-style docstrings** for all public classes, methods, and functions
+2. Minimum docstring content:
+   - One-line summary
+   - Args section for parameters (with types if not obvious from type hints)
+   - Returns section if applicable
+   - Raises section for expected exceptions
+   - Example usage for complex public APIs (optional but encouraged)
+3. Internal/private modules and functions should have at least a one-line docstring
+4. Type hints are required for all public APIs (already enforced)
+
+## Req-9.3: Architecture Documentation
+1. Create `docs/ARCHITECTURE.md` explaining internal structure
+2. Content:
+   - High-level module overview and responsibilities
+   - Data flow: XML → Parser → Models → Analyses → Outputs
+   - Key data structures (LinkInfoData, InputFile, ObjectComponent, FolderNode)
+   - Extension points for adding new analyses
+   - Design decisions and rationale
+3. Use text-based descriptions with ASCII diagrams if helpful
+4. Keep it updated when major architectural changes occur
+
+## Req-9.4: Developer Setup and Contributing
+1. The main README.md should have clear developer setup instructions
+2. Include:
+   - Virtual environment setup
+   - Installation with dev dependencies
+   - Running tests with coverage
+   - Project structure overview with brief file/folder descriptions
+   - References to requirements.md and agents_tasklist.md workflow
+
+## Req-9.5: Release Notes
+1. Maintain integrated release notes in `docs/README.md` (no separate CHANGELOG.md for now)
+2. Use semantic versioning (MAJOR.MINOR.PATCH)
+3. Document notable changes, breaking changes, and new features
+4. Start tracking from v0.1.0 (first structured release post-refactor)
 
 # Req-10: Output Style
 1. Analysis which output a file, should expect an output file path argument, which must be mandatory

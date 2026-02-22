@@ -8,25 +8,67 @@ from ._errors import LinkInfoIssue
 
 @dataclass
 class InputFile:
+    """Represents an object file (.o) or archive (.a) in the linkinfo.
+
+    Attributes:
+        id: Unique identifier for this input file.
+        name: Display name of the file (e.g., "main.o", "libdriver.a").
+        path: Full source path to the input file.
+        object_components: List of ObjectComponents contained in this file.
+    """
+
     id: str
     name: Optional[str] = None
     path: Optional[str] = None
     object_components: List["ObjectComponent"] = field(default_factory=list)
 
     def add_component(self, component: "ObjectComponent") -> None:
+        """Add an object component to this input file.
+
+        Args:
+            component: ObjectComponent to add.
+        """
         self.object_components.append(component)
 
     def get_sorted_components(self) -> List["ObjectComponent"]:
-        """Returns object_components sorted by size in descending order."""
+        """Get components sorted by size in descending order.
+
+        Returns:
+            List of ObjectComponents sorted by size (largest first).
+        """
         return sorted(self.object_components, key=lambda x: x.size or 0, reverse=True)
 
     def get_total_size(self) -> int:
-        """Returns the total size by summing all object component sizes."""
+        """Get total size by summing all object component sizes.
+
+        Returns:
+            Total size in bytes of all components in this input file.
+        """
         return sum(comp.size or 0 for comp in self.object_components)
 
 
 @dataclass
 class ObjectComponent:
+    """Represents a section within an input file.
+
+    Object components are the finest granularity of code/data in the linkinfo,
+    corresponding to sections like .text, .data, .rodata, etc.
+
+    Attributes:
+        id: Unique identifier for this component.
+        name: Display name (section name).
+        load_address: Address where section is loaded.
+        run_address: Address where section executes.
+        size: Size in bytes.
+        alignment: Required alignment.
+        readonly: True if section is read-only.
+        executable: True if section contains executable code.
+        value: Additional metadata value.
+        input_file: Parent InputFile containing this component.
+        refd_ro_sections: IDs of read-only sections this component references.
+        refd_rw_sections: IDs of read-write sections this component references.
+    """
+
     id: str
     name: Optional[str] = None
     load_address: Optional[int] = None
@@ -45,6 +87,19 @@ class ObjectComponent:
 
 @dataclass
 class LogicalGroup:
+    """Represents a named grouping within a memory area.
+
+    Logical groups organize object components and sub-groups within
+    memory areas for hierarchical reporting.
+
+    Attributes:
+        id: Unique identifier.
+        name: Display name of the group.
+        size: Total size of this group.
+        object_components: Components directly in this group.
+        logical_groups: Nested sub-groups.
+    """
+
     id: str
     name: Optional[str] = None
     size: Optional[int] = None
@@ -52,14 +107,33 @@ class LogicalGroup:
     logical_groups: List["LogicalGroup"] = field(default_factory=list)
 
     def add_object_component(self, comp: ObjectComponent) -> None:
+        """Add an object component to this group.
+
+        Args:
+            comp: ObjectComponent to add.
+        """
         self.object_components.append(comp)
 
     def add_logical_group(self, lg: "LogicalGroup") -> None:
+        """Add a nested logical group.
+
+        Args:
+            lg: LogicalGroup to add as a child.
+        """
         self.logical_groups.append(lg)
 
 
 @dataclass
 class MemoryUsage:
+    """Represents memory usage details for a memory area.
+
+    Attributes:
+        kind: Type of usage - "allocated" or "available".
+        start_address: Starting address of this usage block.
+        size: Size in bytes.
+        logical_group: Associated LogicalGroup if applicable.
+    """
+
     kind: str  # 'allocated' or 'available'
     start_address: Optional[int] = None
     size: Optional[int] = None
@@ -68,12 +142,26 @@ class MemoryUsage:
 
 @dataclass
 class MemoryArea:
+    """Represents a memory section (e.g., .text, .data, .bss).
+
+    Attributes:
+        name: Memory area name.
+        length: Total length of this memory area.
+        used_space: Amount of space used.
+        usage_details: List of MemoryUsage entries showing allocation.
+    """
+
     name: Optional[str] = None
     length: Optional[int] = None
     used_space: Optional[int] = None
     usage_details: List[MemoryUsage] = field(default_factory=list)
 
     def add_usage(self, usage: MemoryUsage) -> None:
+        """Add a memory usage entry.
+
+        Args:
+            usage: MemoryUsage to add.
+        """
         self.usage_details.append(usage)
 
 
@@ -119,6 +207,20 @@ class FolderNode:
 
 @dataclass
 class LinkInfoData:
+    """Top-level container for all parsed linkinfo data.
+
+    Aggregates all entities extracted from the linkinfo.xml file.
+
+    Attributes:
+        input_files: Dictionary mapping input file IDs to InputFile objects.
+        object_components: Dictionary mapping component IDs to ObjectComponent objects.
+        logical_groups: Dictionary mapping group IDs to LogicalGroup objects.
+        memory_areas: Dictionary mapping area names to MemoryArea objects.
+        filtered_component_ids: Set of component IDs filtered out (e.g., debug sections).
+        issues: List of parsing issues/warnings encountered.
+        folder_hierarchy: Root FolderNode of the input file folder tree.
+    """
+
     input_files: Dict[str, InputFile] = field(default_factory=dict)
     object_components: Dict[str, ObjectComponent] = field(default_factory=dict)
     logical_groups: Dict[str, LogicalGroup] = field(default_factory=dict)

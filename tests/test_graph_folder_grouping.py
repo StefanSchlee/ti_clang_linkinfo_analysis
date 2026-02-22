@@ -32,10 +32,15 @@ class TestBasicInputFileGraph:
         builder.build_graph()
 
         # Should have nodes for input files + pseudo node
+        # Note: empty files (size=0) are filtered out by default (min_size=0)
         assert builder.graph.number_of_nodes() > 0
-        assert (
-            builder.graph.number_of_nodes() == len(dpl_analyzer._data.input_files) + 1
+
+        # Count non-empty input files
+        non_empty_files = sum(
+            1 for f in dpl_analyzer._data.input_files.values() if f.get_total_size() > 0
         )
+        expected_nodes = non_empty_files + 1  # +1 for pseudo node
+        assert builder.graph.number_of_nodes() == expected_nodes
 
     def test_graph_has_edges(self, dpl_analyzer):
         """Test that graph has edges between input files."""

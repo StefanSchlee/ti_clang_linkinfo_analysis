@@ -9,11 +9,20 @@ from ._models import LinkInfoData, LogicalGroup, ObjectComponent
 def export_markdown(
     data: LinkInfoData, output_path: str, *, mode: Literal["input_file", "memory_area"]
 ) -> None:
-    """Export linkinfo data to markdown with a selectable hierarchy mode.
+    """Export linkinfo data to Markdown with a selectable hierarchy mode.
 
-    Supported modes:
-      - "input_file": Input files as the top-level grouping.
-      - "memory_area": Memory areas with logical groups above the input files.
+    Creates a hierarchical Markdown report with size-sorted tables.
+    All levels show accumulated byte sizes.
+
+    Args:
+        data: Parsed linkinfo data containing input files and components.
+        output_path: Path where the Markdown file will be written.
+        mode: Hierarchy mode to use:
+            - "input_file": Input files as top-level grouping.
+            - "memory_area": Memory areas with logical groups above input files.
+
+    Raises:
+        ValueError: If mode is not "input_file" or "memory_area".
     """
     if mode == "input_file":
         _export_input_file_hierarchy(data, output_path)

@@ -35,6 +35,22 @@ class NodeOptions:
 
 
 class LinkInfoGraphBuilder:
+    """Builds dependency graphs from linkinfo data.
+
+    Creates networkx directed graphs showing dependencies between input files
+    based on object component references. Supports folder grouping to collapse
+    multiple input files into folder nodes.
+
+    Attributes:
+        data: The parsed linkinfo data.
+        graph: The networkx DiGraph being constructed.
+        folder_paths: List of folder paths to group as nodes.
+        min_size: Minimum size threshold for ungrouped input files.
+        folder_to_inputfiles: Mapping from folder paths to input file IDs.
+        inputfile_to_folder: Reverse mapping from input file IDs to folder paths.
+        edge_details: Detailed information about component-level dependencies.
+    """
+
     def __init__(
         self,
         data: LinkInfoData,
@@ -44,14 +60,14 @@ class LinkInfoGraphBuilder:
         """Initialize the graph builder.
 
         Args:
-            data: The parsed linkinfo data.
-            folder_paths: Optional list of folder paths to show as grouped nodes.
-                All input files in these folders will be collapsed into folder nodes.
-                Input files not in these folders remain as individual nodes.
-                Paths should use forward slashes (e.g., "src/drivers").
-            min_size: Minimum size threshold (in bytes) for ungrouped input files to be shown.
-                Input files not in folders with size <= min_size will be filtered out.
-                Default is 0, which filters out empty files.
+            data: The parsed linkinfo data containing input files and components.
+            folder_paths: Optional list of folder paths to group as nodes.
+                Input files within these folders are collapsed into folder nodes.
+                Files outside these folders remain as individual nodes.
+                Use forward slashes (e.g., "src/drivers", "third_party/lwip").
+            min_size: Minimum size in bytes for ungrouped input files.
+                Files not in specified folders with size <= min_size are filtered out.
+                Defaults to 0 (filters only empty files).
         """
         self.data = data
         self.graph = nx.DiGraph()
@@ -72,7 +88,14 @@ class LinkInfoGraphBuilder:
     # -------------------------------------------------------------
 
     def _normalize_folder_path(self, path: str) -> str:
-        """Normalize folder path to use forward slashes and no trailing slash."""
+        """Normalize folder path to use forward slashes and no trailing slash.
+
+        Args:
+            path: Folder path to normalize (may use backslashes or have trailing slash).
+
+        Returns:
+            Normalized path with forward slashes and no trailing slash.
+        """
         return path.replace("\\", "/").rstrip("/")
 
     def _build_folder_mapping(self) -> None:
@@ -109,6 +132,16 @@ class LinkInfoGraphBuilder:
     # -------------------------------------------------------------
 
     def build_graph(self) -> None:
+        """Build the complete dependency graph.
+
+        Constructs nodes (input files or folders) and edges (dependencies)
+        from the linkinfo data. Must be called before exporting.
+
+        The build process:
+            1. Adds nodes (folders or individual input files)
+            2. Processes component references to find dependencies
+            3. Adds aggregated edges to the graph
+        """
         self._add_nodes()
         self._process_component_references()
         self._add_edges_to_graph()
@@ -116,6 +149,20 @@ class LinkInfoGraphBuilder:
     # -------------------------------------------------------------
 
     def export_pyvis(self, output_html: str, *, show: bool = False) -> None:
+        """Export graph as interactive PyVis HTML visualization.
+
+        Creates an HTML file with an interactive graph using PyVis. The visualization
+        includes zoom, pan, drag, and physics controls for exploring dependencies.
+
+        Args:
+            output_html: Path where the HTML file will be written.
+            show: If True, automatically opens the HTML in default browser.
+                Defaults to False.
+
+        Note:
+            Node sizes are scaled based on accumulated byte sizes. Edge tooltips
+            show component-level dependency details.
+        """
         net = Network(height="900px", width="100%", directed=True)
 
         # Nodes
@@ -171,11 +218,18 @@ class LinkInfoGraphBuilder:
         if show:
             webbrowser.open(output_html)
 
-    # Optional: for Gephi
     def export_graphml(self, output_path: str) -> None:
-        """Export graph as GraphML.
+        """Export graph as GraphML for external tools.
 
-        Note: Edge details are converted to strings for GraphML compatibility.
+        Creates a GraphML file compatible with graph analysis tools like
+        Gephi, yEd, and Cytoscape. All node and edge attributes are preserved.
+
+        Args:
+            output_path: Path where the GraphML file will be written.
+
+        Note:
+            Edge details (component-level dependencies) are converted to
+            semicolon-separated strings for GraphML compatibility.
         """
         # Create a copy of the graph for GraphML export
         # GraphML doesn't support list attributes, so we convert details to strings
@@ -195,7 +249,14 @@ class LinkInfoGraphBuilder:
     # -------------------------------------------------------------
 
     def _generate_node_tooltip(self, node_id: str) -> str:
-        """Generate a detailed tooltip showing all components in a node."""
+        """Generate a detailed tooltip showing all components in a node.
+
+        Args:
+            node_id: ID of the node (folder path, input file ID, or pseudo node).
+
+        Returns:
+            Multi-line string with node name, path, and component list with sizes.
+        """
         lines = []
         comps = []
 
@@ -257,7 +318,15 @@ class LinkInfoGraphBuilder:
         return "\n".join(lines)
 
     def _add_nodes(self) -> None:
-        """Add nodes to the graph: either folder nodes or individual input-file nodes."""
+        """Add nodes to the graph: folder nodes or individual input file nodes.
+
+        Creates nodes based on folder grouping configuration:
+            - Folder nodes: Aggregate all input files in specified folders
+            - Input file nodes: Individual files not in specified folders (filtered by min_size)
+            - Pseudo node: Compiler-generated components without an input file
+
+        Each node includes size, label, and color attributes.
+        """
         added_as_folder = set()
 
         # Add folder nodes
@@ -319,7 +388,17 @@ class LinkInfoGraphBuilder:
     # -------------------------------------------------------------
 
     def _get_node_id(self, comp: ObjectComponent) -> str:
-        """Get the node ID for a component (either folder, input-file, or pseudo node)."""
+        """Get the node ID for a component (folder, input file, or pseudo node).
+
+        Args:
+            comp: Object component to look up.
+
+        Returns:
+            Node ID where this component belongs:
+                - Folder path if component's input file is in a grouped folder
+                - Input file ID if not in a grouped folder
+                - Pseudo node ID if component has no input file
+        """
         if comp.input_file is None:
             return PSEUDO_NODE_ID
 
@@ -333,7 +412,12 @@ class LinkInfoGraphBuilder:
     # -------------------------------------------------------------
 
     def _process_component_references(self) -> None:
-        """Process component references and aggregate them into node-level edges."""
+        """Process component references and aggregate them into node-level edges.
+
+        Examines refd_ro_sections and refd_rw_sections for each component,
+        determines source and destination nodes, and accumulates edge details.
+        Self-loops are ignored.
+        """
         for comp in self.data.object_components.values():
             src_node_id = self._get_node_id(comp)
 
@@ -369,6 +453,12 @@ class LinkInfoGraphBuilder:
     # -------------------------------------------------------------
 
     def _add_edges_to_graph(self) -> None:
+        """Add aggregated edges to the graph.
+
+        Adds edges from edge_details dictionary to the networkx graph,
+        filtering out edges where source or destination nodes don't exist
+        (may have been filtered by min_size threshold).
+        """
         for (src, dst), details in self.edge_details.items():
             # Only add edge if both nodes exist in the graph (they may have been filtered)
             if src in self.graph and dst in self.graph:
