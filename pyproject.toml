@@ -6,12 +6,15 @@ build-backend = "setuptools.build_meta"
 name = "ti-clang-linkinfo-analysis"
 version = "0.1.0"
 description = "Analysis tools for TI Clang linkinfo.xml files."
-readme = "README.md"
+readme = "docs/README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Stefan" }]
+authors = [{ name = "Stefan Schlee" }]
 keywords = ["ti", "clang", "linkinfo", "analysis"]
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",

@@ -7,6 +7,7 @@ Analysis tools for the TI Clang `linkinfo.xml` output. The package hides the par
 - `tests/`: pytest suites that exercise the parser, folder hierarchy helpers, and markdown exporter using the `example_files/*debug*` inputs.
 - `example_files/`: sample `dpl_demo` and `enet_cli` linkinfo outputs so the tests and demos run without external artifacts (favor the `*debug*` files when writing regressions).
 - `demo/`: manual scripts that exercise the public API and write results to `demo/output/` so you can inspect Markdown or graph exports.
+- `docs/`: User-facing documentation (README for PyPI, ARCHITECTURE guide, release notes).
 - `requirements.md`, `agents_tasklist.md`, `TODO_for_human.md`, and `AGENTS.md`: governance and planning documents that you must consult before starting new work (edit `agents_tasklist.md` for every task, see the requirements for feature goals, and keep `TODO_for_human.md` in sync with your experiments).
 
 ## Getting started
@@ -173,3 +174,10 @@ This project uses an AI agent-assisted development workflow. Responsibilities ar
 - Architecture documentation: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - Developer documentation: This README.md file
 - Task tracking: [`agents_tasklist.md`](agents_tasklist.md)
+## Contributing
+
+Contributions are welcome! Please feel free to open a pull request on GitHub.
+
+## License
+
+This project is licensed under the MIT License – see the [`LICENSE`](LICENSE) file for details.

@@ -42,8 +42,8 @@ Rule: fully done tasks will be removed over time.
 - [ ] Define versioning milestone for first refactored release.
 
 ## WP-11 License and contributing guidelines (Req-1)
-- [ ] Add LICENSE file (choose appropriate open-source license)
-- [ ] Add CONTRIBUTING.md with contribution guidelines
+- [x] Add LICENSE file (MIT License)
+- [x] Add CONTRIBUTING.md with contribution guidelines
 
 ## Execution order proposal (commit-sized increments)
 1. WP-08 (baseline regression tests) -> 2) WP-02 -> 3) WP-03 -> 4) WP-04 -> 5) WP-05 (markdown) -> 6) WP-07 (icicle) -> 7) WP-06 (graph) -> 8) WP-09 -> 9) WP-10
