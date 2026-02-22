@@ -1,4 +1,5 @@
 from typing import Dict, List, Tuple, Optional, Set
+import webbrowser
 import networkx as nx
 from pyvis.network import Network
 
@@ -105,7 +106,7 @@ class LinkInfoGraphBuilder:
 
     # -------------------------------------------------------------
 
-    def export_pyvis(self, output_html: str) -> None:
+    def export_pyvis(self, output_html: str, *, show: bool = False) -> None:
         net = Network(height="900px", width="100%", directed=True)
 
         # Nodes
@@ -153,7 +154,13 @@ class LinkInfoGraphBuilder:
 
         # Show physics control panel
         net.show_buttons(filter_=["physics"])
-        net.show(output_html, notebook=False)
+
+        # Write to file
+        net.write_html(output_html)
+
+        # Optionally open in browser
+        if show:
+            webbrowser.open(output_html)
 
     # Optional: for Gephi
     def export_graphml(self, output_path: str) -> None:

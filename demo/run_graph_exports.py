@@ -19,6 +19,7 @@ def main() -> None:
     print("Building input-file level graph...")
     output_file = output_dir / "graph_inputfiles.html"
     analyzer.export_inputfile_graph_pyvis(str(output_file))
+    # To open in browser automatically, use: analyzer.export_inputfile_graph_pyvis(str(output_file), show=True)
     print(f"  -> {output_file}")
 
     # Example 2: Graph with folder grouping
@@ -34,7 +35,9 @@ def main() -> None:
         print(f"    - {fp}")
 
     output_file = output_dir / "graph_with_folders.html"
-    analyzer.export_inputfile_graph_pyvis(str(output_file), folder_paths=folder_paths)
+    analyzer.export_inputfile_graph_pyvis(
+        str(output_file), folder_paths=folder_paths, show=True
+    )
     print(f"  -> {output_file}")
 
     # Example 3: Export GraphML for Gephi/Cytoscape

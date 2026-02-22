@@ -64,7 +64,11 @@ class LinkInfoAnalyzer:
     # -----------------
 
     def export_inputfile_graph_pyvis(
-        self, output_path: str, *, folder_paths: Optional[list[str]] = None
+        self,
+        output_path: str,
+        *,
+        folder_paths: Optional[list[str]] = None,
+        show: bool = False,
     ) -> None:
         """Export the input-file level graph as a pyvis HTML file.
 
@@ -74,10 +78,12 @@ class LinkInfoAnalyzer:
                 All input files in these folders will be collapsed into folder nodes.
                 Input files not in these folders remain as individual nodes.
                 Paths should use forward slashes (e.g., "src/drivers").
+            show: If True, open the graph in the default browser after creation.
+                Default is False.
         """
         builder = LinkInfoGraphBuilder(self._data, folder_paths=folder_paths)
         builder.build_graph()
-        builder.export_pyvis(output_path)
+        builder.export_pyvis(output_path, show=show)
 
     def export_inputfile_graph_graphml(
         self, output_path: str, *, folder_paths: Optional[list[str]] = None
