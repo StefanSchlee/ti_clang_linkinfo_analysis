@@ -41,13 +41,16 @@
       - requirements
       - agents.md
       - agents tasklist
-      - video of developement
+      - video of developement: 10 min
+        - extended graph view with folder grouping
+        - cost: 1% of 10€ -> 10 cent
+        - mit recherche und unit tests hätte ich locker 2-3 Tage gebraucht
     - There is more
       - background agents
       - cloud agents
       - subagents
     - Anbieter & costs
     - summary:
-      - speed up 2-5 mal
-      - minimal costs in €
+      - tool in einem Tag statt 2 Wochen
+      - minimal costs in € ~1€ (+1 Tag mich)
       - better test coverage & documentation

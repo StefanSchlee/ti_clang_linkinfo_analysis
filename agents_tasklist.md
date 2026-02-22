@@ -3,31 +3,13 @@
 Legend: `[ ]` open, `[x]` done  
 Rule: fully done tasks will be removed over time.
 
-## WP-06 Graph analysis API generalization (Req-8, Req-2, Req-6, Req-10)
-- [ ] Define a graph builder configuration model that lets callers toggle which node levels appear (object component, input file, folder, logical group, memory area).
-- [ ] Generalize the existing input-file graph into a multi-level graph that aggregates the object-component references into higher-level nodes.
-- [ ] Implement the edge aggregation logic so that the links between folder / group nodes derive from their underlying object components.
-- [ ] Support optional folder-node grouping so that a folder node can collapse multiple input files while keeping the accumulated byte size accurate.
-- [ ] Keep the pyvis and GraphML exporters in sync and enforce explicit `output_path` arguments for every file-producing graph export.
-
-## WP-07 Icicle plot implementation (Req-7, Req-6, Req-10)
-- [x] Add plotly as dependency to pyproject.toml.
-- [x] Create `_icicle.py` module with IcicleBuilder class.
-- [x] Build hierarchy: compacted folders -> input files -> object components using folder_hierarchy.
-- [x] Accumulate byte sizes at each level.
-- [x] Configure vertical orientation (highest level at bottom, leaf sections at top).
-- [x] Implement HTML file output with mandatory output_path.
-- [x] Add optional `show=True` parameter to open plot in browser.
-- [x] Implement `export_icicle_plot()` in LinkInfoAnalyzer.
-- [x] Create demo script `demo/run_icicle_plot.py`.
-- [x] Add unit/integration tests for icicle plotting.
-
 ## WP-08 Testing architecture and coverage (Req-4)
 - [x] Create `tests/` with parser/domain/API/analysis split.
 - [x] Add fixtures for `example_files/*debug*` linkinfo inputs.
 - [x] Add regression tests for current implemented behavior before refactor changes.
 - [x] Add unit/integration tests for markdown export.
-- [ ] Add unit/integration tests for icicle and graph config variants (graph tests deferred until graph feature work).
+- [x] Add unit/integration tests for icicle plotting.
+- [x] Add unit/integration tests for graph with folder grouping.
 - [x] Add coverage tooling and threshold reporting (pytest-cov).
 
 ## WP-09 Documentation and developer workflow (Req-1, Req-2, Req-4, Req-9)

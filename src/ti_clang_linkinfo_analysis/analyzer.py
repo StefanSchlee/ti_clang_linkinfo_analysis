@@ -63,15 +63,35 @@ class LinkInfoAnalyzer:
     # Graph analyses
     # -----------------
 
-    def export_inputfile_graph_pyvis(self, output_path: str) -> None:
-        """Export the input-file level graph as a pyvis HTML file."""
-        builder = LinkInfoGraphBuilder(self._data)
+    def export_inputfile_graph_pyvis(
+        self, output_path: str, *, folder_paths: Optional[list[str]] = None
+    ) -> None:
+        """Export the input-file level graph as a pyvis HTML file.
+
+        Args:
+            output_path: Path where the HTML file will be written.
+            folder_paths: Optional list of folder paths to show as grouped nodes.
+                All input files in these folders will be collapsed into folder nodes.
+                Input files not in these folders remain as individual nodes.
+                Paths should use forward slashes (e.g., "src/drivers").
+        """
+        builder = LinkInfoGraphBuilder(self._data, folder_paths=folder_paths)
         builder.build_graph()
         builder.export_pyvis(output_path)
 
-    def export_inputfile_graph_graphml(self, output_path: str) -> None:
-        """Export the input-file level graph as GraphML."""
-        builder = LinkInfoGraphBuilder(self._data)
+    def export_inputfile_graph_graphml(
+        self, output_path: str, *, folder_paths: Optional[list[str]] = None
+    ) -> None:
+        """Export the input-file level graph as GraphML.
+
+        Args:
+            output_path: Path where the GraphML file will be written.
+            folder_paths: Optional list of folder paths to show as grouped nodes.
+                All input files in these folders will be collapsed into folder nodes.
+                Input files not in these folders remain as individual nodes.
+                Paths should use forward slashes (e.g., "src/drivers").
+        """
+        builder = LinkInfoGraphBuilder(self._data, folder_paths=folder_paths)
         builder.build_graph()
         builder.export_graphml(output_path)
 

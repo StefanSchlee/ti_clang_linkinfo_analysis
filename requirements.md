@@ -40,17 +40,15 @@ Hint: This feature is already partly implemented in the internal markdown export
 
 # Req-8: Graph-based Analysis
 1. Using networkx and pyvis.network packages we can do graph visualisations
-2. The nodes may be some sort of the hierarchical groups: object-components, input-files, input-file folders, logical groups, memory areas
-3. The edges between the nodes originate from the "refd_ro_sections" and "refd_rw_sections" of the object components. 
-4. The edges between higher hierachical levels are deducted by all links between the underlying object components
-5. For example, "linkinfo_graph" already makes a graph visualisation on the input-file level
-6. Similar to the markdown analysis, i want one api-function which can be customized using arguments
-7. The base graph is drawn on the input-file level
-8. The size of the nodes is based on the byte size of the respective group
-9. I want to optionally supply a list of folders, which are additionally added as nodes.
-   1. All input-files which belong to one of these folders, are removed as nodes and added to these folder nodes
-   2. The folder nodes size are equal to the sum of the input files belonging to
-   3. The edges between the folder nodes and other folder/inputfile-nodes should also be found by analysing all links of the underlying input files
+2. The base graph is drawn on the input-file level
+3. The nodes are input files, with size based on the accumulated byte size of all object components
+4. The edges between nodes originate from the "refd_ro_sections" and "refd_rw_sections" of the object components, aggregated at the input-file level
+5. I want to optionally supply a list of folder paths, which are added as folder nodes:
+   1. All input-files which belong to one of these folders are removed as individual nodes and accumulated into these folder nodes
+   2. The folder node size is equal to the sum of the input files belonging to it
+   3. The edges between folder nodes and other folder/input-file nodes are aggregated from all links of the underlying input files
+   4. Input files NOT in the specified folders remain as individual nodes
+6. Export formats: pyvis HTML (interactive) and GraphML (for external tools)
 
 # Req-9: Documentation
 1. The main README.md is for everyone using this repository
