@@ -35,7 +35,12 @@ class NodeOptions:
 
 
 class LinkInfoGraphBuilder:
-    def __init__(self, data: LinkInfoData, folder_paths: Optional[List[str]] = None):
+    def __init__(
+        self,
+        data: LinkInfoData,
+        folder_paths: Optional[List[str]] = None,
+        min_size: int = 0,
+    ):
         """Initialize the graph builder.
 
         Args:
@@ -44,12 +49,16 @@ class LinkInfoGraphBuilder:
                 All input files in these folders will be collapsed into folder nodes.
                 Input files not in these folders remain as individual nodes.
                 Paths should use forward slashes (e.g., "src/drivers").
+            min_size: Minimum size threshold (in bytes) for ungrouped input files to be shown.
+                Input files not in folders with size <= min_size will be filtered out.
+                Default is 0, which filters out empty files.
         """
         self.data = data
         self.graph = nx.DiGraph()
 
         # Folder grouping configuration
         self.folder_paths = folder_paths or []
+        self.min_size = min_size
         # Map: folder_path -> set of input_file ids in that folder
         self.folder_to_inputfiles: Dict[str, Set[str]] = {}
         # Map: input_file_id -> folder_path (reverse mapping)
@@ -145,7 +154,7 @@ class LinkInfoGraphBuilder:
             {
                 "gravity": -2000,
                 "central_gravity": 0.3,
-                "spring_length": 200,
+                "spring_length": 500,
                 "spring_strength": 0.04,
                 "damping": 0.3,
                 "overlap": 0.5,
@@ -275,6 +284,11 @@ class LinkInfoGraphBuilder:
                 continue
 
             total_size = input_file.get_total_size()
+
+            # Filter out small ungrouped input files
+            if total_size <= self.min_size:
+                continue
+
             label = f"{input_file.name}\n{total_size} bytes"
 
             self.graph.add_node(
@@ -356,7 +370,9 @@ class LinkInfoGraphBuilder:
 
     def _add_edges_to_graph(self) -> None:
         for (src, dst), details in self.edge_details.items():
-            self.graph.add_edge(src, dst, details=details)
+            # Only add edge if both nodes exist in the graph (they may have been filtered)
+            if src in self.graph and dst in self.graph:
+                self.graph.add_edge(src, dst, details=details)
 
 
 if __name__ == "__main__":

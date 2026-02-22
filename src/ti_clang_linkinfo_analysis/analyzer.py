@@ -68,6 +68,7 @@ class LinkInfoAnalyzer:
         output_path: str,
         *,
         folder_paths: Optional[list[str]] = None,
+        min_size: int = 0,
         show: bool = False,
     ) -> None:
         """Export the input-file level graph as a pyvis HTML file.
@@ -78,15 +79,24 @@ class LinkInfoAnalyzer:
                 All input files in these folders will be collapsed into folder nodes.
                 Input files not in these folders remain as individual nodes.
                 Paths should use forward slashes (e.g., "src/drivers").
+            min_size: Minimum size threshold (in bytes) for ungrouped input files to be shown.
+                Input files not in folders with size <= min_size will be filtered out.
+                Default is 0, which filters out empty files.
             show: If True, open the graph in the default browser after creation.
                 Default is False.
         """
-        builder = LinkInfoGraphBuilder(self._data, folder_paths=folder_paths)
+        builder = LinkInfoGraphBuilder(
+            self._data, folder_paths=folder_paths, min_size=min_size
+        )
         builder.build_graph()
         builder.export_pyvis(output_path, show=show)
 
     def export_inputfile_graph_graphml(
-        self, output_path: str, *, folder_paths: Optional[list[str]] = None
+        self,
+        output_path: str,
+        *,
+        folder_paths: Optional[list[str]] = None,
+        min_size: int = 0,
     ) -> None:
         """Export the input-file level graph as GraphML.
 
@@ -96,8 +106,13 @@ class LinkInfoAnalyzer:
                 All input files in these folders will be collapsed into folder nodes.
                 Input files not in these folders remain as individual nodes.
                 Paths should use forward slashes (e.g., "src/drivers").
+            min_size: Minimum size threshold (in bytes) for ungrouped input files to be shown.
+                Input files not in folders with size <= min_size will be filtered out.
+                Default is 0, which filters out empty files.
         """
-        builder = LinkInfoGraphBuilder(self._data, folder_paths=folder_paths)
+        builder = LinkInfoGraphBuilder(
+            self._data, folder_paths=folder_paths, min_size=min_size
+        )
         builder.build_graph()
         builder.export_graphml(output_path)
 
