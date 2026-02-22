@@ -1,0 +1,56 @@
+- Refaktorisierung
+  - Markdown Plotting in eigenes File verschieben
+
+
+- Table view with Regions + Sections
+  - [ ] fix alignement
+
+- Icicle Graph with plotly
+  - Use Paths as hierarchy
+    - group folder together which are not branching
+    - Parse Folder Structure in Parser
+  - use separate file for Icicle Plots
+  - one plot with only paths, files, components
+  - one plot with memory sections and then paths then files then components
+
+- Semantic FeatureGroups
+  - linking between groups similar to input files: aggregate input file links
+  - with path filters
+  - with manually filters?
+  - with AI-assisted filtering
+    - muss größere Modelle Probieren
+
+- Präsentation
+  - Teil 1: Tool
+    - Motivation: Speicher wird knapp
+    - Bisherige Analysen
+      - Incrementelle Analyse per Pull-Request und Total size plot
+      - Sections Pie Chart
+      - Manuelle Analyse der größten Brocken im CCS Memory Plot
+    - Welche zusätzlichen Informationen in der Linkinfo
+      - Inputfile (object file)
+      - referenced symbols
+    - Neue Analysen
+      - Tables
+      - Icicle
+      - Graph
+  - Teil 2: Agentenbasierte programmierung
+    - Was sind Coding Agenten (Building blocks ums LLM)
+    - Chat-Frontend: Chatting mit Context
+    - advanced developement flow
+      - requirements
+      - agents.md
+      - agents tasklist
+      - video of developement: 10 min
+        - extended graph view with folder grouping
+        - cost: 1% of 10€ -> 10 cent
+        - mit recherche und unit tests hätte ich locker 2-3 Tage gebraucht
+    - There is more
+      - background agents
+      - cloud agents
+      - subagents
+    - Anbieter & costs
+    - summary:
+      - tool in einem Tag statt 2 Wochen
+      - minimal costs in € ~1€ (+1 Tag mich)
+      - better test coverage & documentation
