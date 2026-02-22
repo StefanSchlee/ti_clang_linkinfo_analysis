@@ -2,6 +2,12 @@
 
 Analysis tools for the TI Clang `linkinfo.xml` output. The package hides the parser and model plumbing behind `ti_clang_linkinfo_analysis.LinkInfoAnalyzer`, so downstream consumers only need to focus on selecting the right analyses and exporting their preferred artifacts.
 
+## Documentation
+
+For detailed information about this project, please refer to the [docs](docs/) directory:
+- [Architecture Guide](docs/ARCHITECTURE.md): Technical design and internal structure
+- [Project README](docs/README.md): Comprehensive overview and feature descriptions
+
 ## Layout at a glance
 - `src/ti_clang_linkinfo_analysis`: core package with the analyzer, parsers, markdown exporter, and graph builder.
 - `tests/`: pytest suites that exercise the parser, folder hierarchy helpers, and markdown exporter using the `example_files/*debug*` inputs.
