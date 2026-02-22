@@ -11,12 +11,16 @@ Rule: fully done tasks will be removed over time.
 - [ ] Keep the pyvis and GraphML exporters in sync and enforce explicit `output_path` arguments for every file-producing graph export.
 
 ## WP-07 Icicle plot implementation (Req-7, Req-6, Req-10)
-- [ ] Add plotly-based icicle builder module.
-- [ ] Build hierarchy: compacted folders -> input files -> object components.
-- [ ] Use accumulated byte size for node values.
-- [ ] Configure vertical orientation with highest level at bottom.
-- [ ] Implement configurable icicle API modes: interactive `Figure` return and optional HTML file output.
-- [ ] If HTML output is requested, enforce mandatory output-path argument.
+- [x] Add plotly as dependency to pyproject.toml.
+- [x] Create `_icicle.py` module with IcicleBuilder class.
+- [x] Build hierarchy: compacted folders -> input files -> object components using folder_hierarchy.
+- [x] Accumulate byte sizes at each level.
+- [x] Configure vertical orientation (highest level at bottom, leaf sections at top).
+- [x] Implement HTML file output with mandatory output_path.
+- [x] Add optional `show=True` parameter to open plot in browser.
+- [x] Implement `export_icicle_plot()` in LinkInfoAnalyzer.
+- [x] Create demo script `demo/run_icicle_plot.py`.
+- [x] Add unit/integration tests for icicle plotting.
 
 ## WP-08 Testing architecture and coverage (Req-4)
 - [x] Create `tests/` with parser/domain/API/analysis split.

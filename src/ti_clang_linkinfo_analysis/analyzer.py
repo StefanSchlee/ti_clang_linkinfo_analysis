@@ -79,10 +79,20 @@ class LinkInfoAnalyzer:
     # Icicle analysis
     # -----------------
 
-    def build_icicle_plot(
-        self, *, output_path: Optional[str] = None, show: bool = False
-    ) -> None:
-        """Build the icicle plot (implemented in WP-07)."""
-        raise NotImplementedError(
-            "Icicle plot is not implemented yet. Planned for WP-07."
-        )
+    def export_icicle_plot(self, output_path: str, *, show: bool = False) -> None:
+        """Export an interactive icicle plot visualization.
+
+        The plot shows a hierarchical breakdown of memory usage:
+        - Top level: compacted folders (single-child chains collapsed)
+        - Middle level: input files
+        - Leaf level: object components
+
+        Args:
+            output_path: Path where the HTML file will be written (mandatory).
+            show: If True, open the plot in the default browser after creation.
+                Default is False.
+        """
+        from ._icicle import IcicleBuilder
+
+        builder = IcicleBuilder(self._data)
+        builder.export_html(output_path, show=show)
