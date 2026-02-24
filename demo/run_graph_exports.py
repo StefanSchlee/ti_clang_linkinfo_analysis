@@ -9,7 +9,7 @@ from ti_clang_linkinfo_analysis import LinkInfoAnalyzer
 
 def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
-    xml_path = repo_root / "example_files" / "enet_cli_debug_linkinfo.xml"
+    xml_path = repo_root / "example_files" / "dpl_demo_debug_linkinfo.xml"
     output_dir = repo_root / "demo" / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -22,8 +22,7 @@ def main() -> None:
     # # To open in browser automatically, use: analyzer.export_inputfile_graph_pyvis(str(output_file), show=True)
     # print(f"  -> {output_file}")
 
-    # Example 2: Graph with folder grouping
-    # Group files from specific SDK folders
+    # Example 2: Graph with manual folder grouping
     folder_paths = [
         "C:/ti/mcu_plus_sdk_am243x_11_02_00_24/source/networking/tsn",
         "C:/ti/mcu_plus_sdk_am243x_11_02_00_24/source/networking/enet",
@@ -34,7 +33,7 @@ def main() -> None:
         "C:/Users/Stefan/workspace_v12/enet_cli_app_am243x-lp_r5fss0-0_freertos_ti-arm-clang/Debug",
     ]
 
-    print("\nBuilding graph with folder grouping...")
+    print("\nBuilding graph with manual folder grouping...")
     print(f"  Grouping folders:")
     for fp in folder_paths:
         print(f"    - {fp}")
@@ -45,7 +44,26 @@ def main() -> None:
     )
     print(f"  -> {output_file}")
 
-    # Example 3: Export GraphML for Gephi/Cytoscape
+    # Example 3: Graph with automatic parent-folder grouping
+    print("\nBuilding graph with automatic parent-folder grouping...")
+    output_file = output_dir / "graph_auto_parent_folders.html"
+    analyzer.export_inputfile_graph_pyvis(
+        str(output_file), auto_group_parent_folders=True, show=True
+    )
+    print(f"  -> {output_file}")
+
+    # Example 4: Hybrid mode (manual + automatic)
+    print("\nBuilding graph with hybrid grouping (manual + automatic)...")
+    output_file = output_dir / "graph_hybrid_grouping.html"
+    analyzer.export_inputfile_graph_pyvis(
+        str(output_file),
+        folder_paths=folder_paths,
+        auto_group_parent_folders=True,
+        show=True,
+    )
+    print(f"  -> {output_file}")
+
+    # Example 5: Export GraphML for Gephi/Cytoscape
     # print("\nExporting GraphML format...")
     # output_file = output_dir / "graph_inputfiles.graphml"
     # analyzer.export_inputfile_graph_graphml(str(output_file))

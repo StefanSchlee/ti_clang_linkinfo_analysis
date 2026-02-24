@@ -250,6 +250,53 @@ class TestFolderHierarchyBuilder:
         # Path components are: a, b, c, d, e, f (6 levels below root)
         assert get_depth(root) == 6
 
+    def test_directory_style_path_keeps_last_folder_level(self):
+        """Directory-style paths must not lose the final folder before files."""
+        builder = FolderHierarchy()
+
+        input_file = InputFile(
+            id="file1",
+            name="dpl_demo.o",
+            path=r"C:\Users\Stefan\workspace_v12\proj\Debug\.\\",
+        )
+        builder.add_input_file(input_file)
+
+        root = builder.get_root()
+        dot_node = (
+            root.children["C:"]
+            .children["Users"]
+            .children["Stefan"]
+            .children["workspace_v12"]
+            .children["proj"]
+            .children["Debug"]
+            .children["."]
+        )
+        assert "file1" in dot_node.input_files
+
+    def test_directory_style_path_keeps_nested_last_folder_level(self):
+        """Nested directory-style paths must keep final folder (e.g. syscfg)."""
+        builder = FolderHierarchy()
+
+        input_file = InputFile(
+            id="file1",
+            name="ti_dpl_config.o",
+            path=r"C:\Users\Stefan\workspace_v12\proj\Debug\.\syscfg\\",
+        )
+        builder.add_input_file(input_file)
+
+        root = builder.get_root()
+        syscfg_node = (
+            root.children["C:"]
+            .children["Users"]
+            .children["Stefan"]
+            .children["workspace_v12"]
+            .children["proj"]
+            .children["Debug"]
+            .children["."]
+            .children["syscfg"]
+        )
+        assert "file1" in syscfg_node.input_files
+
     def test_compaction_single_child_chains(self):
         """Test path compaction collapses single-child chains."""
         data = LinkInfoData()

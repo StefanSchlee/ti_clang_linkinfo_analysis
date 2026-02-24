@@ -331,3 +331,99 @@ class TestLargerProject:
 
         assert output_file.exists()
         assert output_file.stat().st_size > 0
+
+
+class TestAutoFolderGrouping:
+    """Test automatic parent-folder grouping mode."""
+
+    def test_auto_grouping_reduces_node_count(self, dpl_analyzer):
+        """Auto grouping should reduce graph node count compared to raw input-file graph."""
+        from ti_clang_linkinfo_analysis.linkinfo_graph import LinkInfoGraphBuilder
+
+        builder_no_grouping = LinkInfoGraphBuilder(dpl_analyzer._data)
+        builder_no_grouping.build_graph()
+
+        builder_auto = LinkInfoGraphBuilder(
+            dpl_analyzer._data, auto_group_parent_folders=True
+        )
+        builder_auto.build_graph()
+
+        assert (
+            builder_auto.graph.number_of_nodes()
+            < builder_no_grouping.graph.number_of_nodes()
+        )
+
+    def test_auto_grouping_creates_folder_nodes(self, dpl_analyzer):
+        """Auto grouping should create folder-type nodes."""
+        from ti_clang_linkinfo_analysis.linkinfo_graph import (
+            LinkInfoGraphBuilder,
+            NODE_TYPE_FOLDER,
+        )
+
+        builder = LinkInfoGraphBuilder(
+            dpl_analyzer._data, auto_group_parent_folders=True
+        )
+        builder.build_graph()
+
+        folder_nodes = [
+            node_id
+            for node_id, data in builder.graph.nodes(data=True)
+            if data.get("node_type") == NODE_TYPE_FOLDER
+        ]
+        assert folder_nodes, "Expected at least one folder node in auto-grouping mode"
+
+    def test_hybrid_grouping_manual_takes_precedence(self, dpl_analyzer):
+        """In hybrid mode, matching manual folder paths should override auto grouping."""
+        from ti_clang_linkinfo_analysis.linkinfo_graph import LinkInfoGraphBuilder
+
+        input_files_with_paths = [
+            f for f in dpl_analyzer._data.input_files.values() if f.path
+        ]
+        assert (
+            input_files_with_paths
+        ), "Need at least one input file with path for this test"
+
+        sample_file = input_files_with_paths[0]
+        normalized_path = sample_file.path.replace("\\", "/").rstrip("/")
+        if "/" not in normalized_path:
+            pytest.skip("Sample file path has no parent folder to test precedence")
+
+        manual_parent = normalized_path.rsplit("/", 1)[0]
+        if not manual_parent:
+            pytest.skip("Could not derive manual parent folder from sample path")
+
+        builder = LinkInfoGraphBuilder(
+            dpl_analyzer._data,
+            folder_paths=[manual_parent],
+            auto_group_parent_folders=True,
+        )
+        builder.build_graph()
+
+        mapped_folder = builder.inputfile_to_folder.get(sample_file.id)
+        if mapped_folder is None:
+            pytest.skip("Sample input file was not grouped in this fixture")
+
+        assert mapped_folder == manual_parent
+
+    def test_auto_grouping_pyvis_export(self, dpl_analyzer, tmp_path):
+        """PyVis export should work with automatic grouping enabled."""
+        output_file = tmp_path / "test_graph_auto_grouping.html"
+        dpl_analyzer.export_inputfile_graph_pyvis(
+            str(output_file), auto_group_parent_folders=True
+        )
+
+        assert output_file.exists()
+        assert output_file.stat().st_size > 0
+
+    def test_auto_grouping_graphml_export(self, dpl_analyzer, tmp_path):
+        """GraphML export should work with automatic grouping enabled."""
+        output_file = tmp_path / "test_graph_auto_grouping.graphml"
+        dpl_analyzer.export_inputfile_graph_graphml(
+            str(output_file), auto_group_parent_folders=True
+        )
+
+        assert output_file.exists()
+        assert output_file.stat().st_size > 0
+
+        g = nx.read_graphml(str(output_file))
+        assert g.number_of_nodes() > 0

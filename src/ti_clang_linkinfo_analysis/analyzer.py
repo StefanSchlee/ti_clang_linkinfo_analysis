@@ -95,6 +95,7 @@ class LinkInfoAnalyzer:
         output_path: str,
         *,
         folder_paths: Optional[list[str]] = None,
+        auto_group_parent_folders: bool = False,
         min_size: int = 0,
         show: bool = False,
     ) -> None:
@@ -110,6 +111,10 @@ class LinkInfoAnalyzer:
                 Input files within these folders are collapsed into folder nodes.
                 Files outside these folders remain as individual nodes.
                 Use forward slashes (e.g., "src/drivers", "third_party/lwip").
+            auto_group_parent_folders: If True, automatically discovers all unique
+                parent folders from input file paths and groups files accordingly.
+                Can be combined with `folder_paths` for hybrid grouping.
+                Manual `folder_paths` take precedence for matching files.
             min_size: Minimum size in bytes for ungrouped input files.
                 Files not in specified folders with size <= min_size are filtered out.
                 Defaults to 0 (filters only empty files).
@@ -120,12 +125,16 @@ class LinkInfoAnalyzer:
             >>> analyzer.export_inputfile_graph_pyvis(
             ...     "graph.html",
             ...     folder_paths=["src/drivers", "src/app"],
+            ...     auto_group_parent_folders=True,
             ...     min_size=2048,
             ...     show=True
             ... )
         """
         builder = LinkInfoGraphBuilder(
-            self._data, folder_paths=folder_paths, min_size=min_size
+            self._data,
+            folder_paths=folder_paths,
+            auto_group_parent_folders=auto_group_parent_folders,
+            min_size=min_size,
         )
         builder.build_graph()
         builder.export_pyvis(output_path, show=show)
@@ -135,6 +144,7 @@ class LinkInfoAnalyzer:
         output_path: str,
         *,
         folder_paths: Optional[list[str]] = None,
+        auto_group_parent_folders: bool = False,
         min_size: int = 0,
     ) -> None:
         """Export dependency graph as GraphML for external tools.
@@ -148,6 +158,10 @@ class LinkInfoAnalyzer:
                 Input files within these folders are collapsed into folder nodes.
                 Files outside these folders remain as individual nodes.
                 Use forward slashes (e.g., "src/drivers", "third_party/lwip").
+            auto_group_parent_folders: If True, automatically discovers all unique
+                parent folders from input file paths and groups files accordingly.
+                Can be combined with `folder_paths` for hybrid grouping.
+                Manual `folder_paths` take precedence for matching files.
             min_size: Minimum size in bytes for ungrouped input files.
                 Files not in specified folders with size <= min_size are filtered out.
                 Defaults to 0 (filters only empty files).
@@ -156,11 +170,15 @@ class LinkInfoAnalyzer:
             >>> analyzer.export_inputfile_graph_graphml(
             ...     "deps.graphml",
             ...     folder_paths=["src/drivers"],
+            ...     auto_group_parent_folders=True,
             ...     min_size=1024
             ... )
         """
         builder = LinkInfoGraphBuilder(
-            self._data, folder_paths=folder_paths, min_size=min_size
+            self._data,
+            folder_paths=folder_paths,
+            auto_group_parent_folders=auto_group_parent_folders,
+            min_size=min_size,
         )
         builder.build_graph()
         builder.export_graphml(output_path)

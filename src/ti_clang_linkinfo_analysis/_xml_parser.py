@@ -49,12 +49,16 @@ class LinkInfoXmlParser:
             file_id = elem.attrib["id"]
 
             name = self._get_text(elem, "name")
+            file = self._get_text(elem, "file")
             path = self._get_text(elem, "path")
+            kind = self._get_text(elem, "kind")
 
             data.input_files[file_id] = InputFile(
                 id=file_id,
                 name=name,
+                file=file,
                 path=path,
+                kind=kind,
             )
 
     def _parse_object_components(self, root: ET.Element, data: LinkInfoData) -> None:

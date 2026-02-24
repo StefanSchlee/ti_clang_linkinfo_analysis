@@ -1,7 +1,12 @@
-- license on pypi missing
+
 - screenshots in readme
 - in github-profile einfügen
 - glob filter für path grouping?
+
+
+    Suche in dependency graph
+    In dependency: use parent folder as default-option to group (show full path maybe)
+    In dependency: maybe filters what to exclude from grouping
 
 - Semantic FeatureGroups
   - linking between groups similar to input files: aggregate input file links
@@ -40,6 +45,9 @@
       - cloud agents
       - subagents
     - Anbieter & costs
+    - Dica+Kilo mit Copilot vergleichen
+      - Intelligence scores (wie bei Anfangszeiten smartphone, diese Unterschiede entscheiden stark was geht)
+      - Beispiel?
     - summary:
       - tool in einem Tag statt 2 Wochen
       - minimal costs in € ~1€ (+1 Tag mich)

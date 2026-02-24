@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from ._models import FolderNode, InputFile, LinkInfoData
-from ._path_utils import get_filename, get_parent_path, split_path
+from ._path_utils import get_filename, get_parent_path, normalize_path, split_path
 
 
 class FolderHierarchy:
@@ -68,8 +68,26 @@ class FolderHierarchy:
         if self.root is None:
             self.root = FolderNode(name="root", path="/")
 
-        # Get the parent directory (exclude filename)
-        parent_dir = get_parent_path(input_file.path)
+        # Resolve directory path for hierarchy placement.
+        # linkinfo input-file paths are usually directory paths (often with
+        # trailing separator), but we still support file-path style input.
+        raw_path = str(input_file.path)
+        normalized_path = normalize_path(raw_path)
+        has_trailing_sep = raw_path.endswith(("/", "\\"))
+
+        if input_file.name and get_filename(normalized_path) == input_file.name:
+            # Path includes filename -> use its parent directory.
+            parent_dir = get_parent_path(normalized_path)
+        elif has_trailing_sep:
+            # Path explicitly denotes a directory.
+            parent_dir = normalized_path
+        elif input_file.name and get_filename(normalized_path) != input_file.name:
+            # Name is known and differs from last path component -> treat path as directory.
+            parent_dir = normalized_path
+        else:
+            # Backward-compatible fallback for path strings that look like file paths.
+            parent_dir = get_parent_path(normalized_path)
+
         path_components = split_path(parent_dir)
         if not path_components:
             # File at root

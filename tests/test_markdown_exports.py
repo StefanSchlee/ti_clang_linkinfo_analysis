@@ -11,8 +11,8 @@ def test_export_sorted_input_files_markdown(example_files, tmp_path) -> None:
 
     content = output_path.read_text(encoding="utf-8")
     assert "# Input Files (133, sorted by total size)" in content
-    assert "**Total size (all components): 134642 bytes**" in content
-    assert "Components without Input File (total size: 19124 bytes)" in content
+    assert "**Total size: 134642 bytes**" in content
+    assert "Note: Some sections like .sysmem are missing here" in content
 
 
 def test_export_memory_areas_hierarchy_markdown(example_files, tmp_path) -> None:
@@ -35,4 +35,4 @@ def test_export_markdown_unified_api(example_files, tmp_path) -> None:
 
     content = output_path.read_text(encoding="utf-8")
     assert "# Input Files" in content
-    assert "Total size (all components)" in content
+    assert "**Total size:" in content

@@ -9,6 +9,7 @@ breakdown of memory usage:
 
 from __future__ import annotations
 
+import math
 from typing import List, Tuple
 
 import plotly.graph_objects as go
@@ -88,6 +89,9 @@ class IcicleBuilder:
         # Add orphan components (without input file) as a separate top-level group
         self._add_orphan_components("", orphan_components, orphan_size)
 
+        # Apply logarithmic scaling to colors for better differentiation
+        log_colors = [math.log10(v + 1) for v in self._values]
+
         # Create the figure
         fig = go.Figure(
             go.Icicle(
@@ -97,8 +101,8 @@ class IcicleBuilder:
                 ids=self._ids,
                 branchvalues="total",
                 marker=dict(
-                    colorscale="RdYlGn_r",  # Red-Yellow-Green reversed (high=red)
-                    cmid=sum(self._values) / len(self._values) if self._values else 0,
+                    colorscale="RdBu_r",  # Blue to red (reversed)
+                    colors=log_colors,  # Use logarithmic scale for colors
                 ),
                 text=self._hover_texts,
                 hovertext=self._hover_texts,
@@ -185,12 +189,21 @@ class IcicleBuilder:
         file_id = f"file:{input_file.id}"
         file_size = input_file.get_total_size()
 
+        # Display file property if available, otherwise fall back to name
+        display_name = input_file.name or input_file.id
+
+        # Build hover text with file, kind, and size
+        hover_text = f"File: {input_file.file or display_name}"
+        if input_file.kind:
+            hover_text += f" ({input_file.kind})"
+        hover_text += f"<br>Size: {self._format_bytes(file_size)}"
+
         self._add_node(
-            label=input_file.name or input_file.id,
+            label=display_name,
             parent=parent_id,
             value=file_size,
             node_id=file_id,
-            hover_text=f"File: {input_file.name}<br>Size: {self._format_bytes(file_size)}",
+            hover_text=hover_text,
         )
 
         # Add all object components in this file
@@ -271,7 +284,7 @@ class IcicleBuilder:
         Returns:
             Formatted hover text string.
         """
-        lines = [f"Component: {component.name or component.id}"]
+        lines = []
         if component.size:
             lines.append(f"Size: {IcicleBuilder._format_bytes(component.size)}")
         if component.load_address is not None:

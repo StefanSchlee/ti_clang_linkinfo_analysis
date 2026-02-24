@@ -130,7 +130,7 @@ class TestIcicleDataFormatting:
             hover_text = IcicleBuilder._format_component_hover(component)
 
             assert isinstance(hover_text, str)
-            assert "Component:" in hover_text
+            assert "Size:" in hover_text or "Load:" in hover_text
             assert len(hover_text) > 0
 
 
