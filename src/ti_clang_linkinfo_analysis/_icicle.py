@@ -9,6 +9,7 @@ breakdown of memory usage:
 
 from __future__ import annotations
 
+import math
 from typing import List, Tuple
 
 import plotly.graph_objects as go
@@ -88,6 +89,9 @@ class IcicleBuilder:
         # Add orphan components (without input file) as a separate top-level group
         self._add_orphan_components("", orphan_components, orphan_size)
 
+        # Apply logarithmic scaling to colors for better differentiation
+        log_colors = [math.log10(v + 1) for v in self._values]
+
         # Create the figure
         fig = go.Figure(
             go.Icicle(
@@ -97,8 +101,8 @@ class IcicleBuilder:
                 ids=self._ids,
                 branchvalues="total",
                 marker=dict(
-                    colorscale="RdYlGn_r",  # Red-Yellow-Green reversed (high=red)
-                    cmid=sum(self._values) / len(self._values) if self._values else 0,
+                    colorscale="RdBu_r",  # Blue to red (reversed)
+                    colors=log_colors,  # Use logarithmic scale for colors
                 ),
                 text=self._hover_texts,
                 hovertext=self._hover_texts,
