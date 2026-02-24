@@ -281,6 +281,13 @@ for folder in folders_sorted:
 
 ## Release Notes
 
+### v1.1.x (2026-02-24)
+
+- Added automatic parent-folder grouping for graph exports (`auto_group_parent_folders`) in both PyVis and GraphML exports
+- added some visual improvements in the icicle visualisation
+- bugfix: folder hierarchy always missing the last folder
+- minor improvements
+
 ### v1.0.x (2026-02-22)
 
 Initial structured release.

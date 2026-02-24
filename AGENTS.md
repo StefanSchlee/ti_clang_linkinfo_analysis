@@ -21,5 +21,10 @@ I want to create a python analysis tool for the linkinfo.xml files, which are em
 - I want you to create pytest tests, and run these after major modifications to see if all still works
 - You are allowed to refactor and restructure the whole project whenever necessary
 
+# Releasing Process
+- The package is published on Pypi
+- Prior to release, make thorough checks: do all tests pass, do a clean package build
+- Check if release notes in docs/readme.md are up to date with current release
+
 # Tools
 - Use the local .venv for calling any python commands
