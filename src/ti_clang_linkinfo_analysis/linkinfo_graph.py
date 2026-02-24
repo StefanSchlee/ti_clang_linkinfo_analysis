@@ -44,7 +44,8 @@ class LinkInfoGraphBuilder:
     Attributes:
         data: The parsed linkinfo data.
         graph: The networkx DiGraph being constructed.
-        folder_paths: List of folder paths to group as nodes.
+        folder_paths: Manual list of folder paths to group as nodes.
+        auto_group_parent_folders: Whether to auto-group by discovered parent folders.
         min_size: Minimum size threshold for ungrouped input files.
         folder_to_inputfiles: Mapping from folder paths to input file IDs.
         inputfile_to_folder: Reverse mapping from input file IDs to folder paths.
@@ -55,6 +56,7 @@ class LinkInfoGraphBuilder:
         self,
         data: LinkInfoData,
         folder_paths: Optional[List[str]] = None,
+        auto_group_parent_folders: bool = False,
         min_size: int = 0,
     ):
         """Initialize the graph builder.
@@ -65,6 +67,11 @@ class LinkInfoGraphBuilder:
                 Input files within these folders are collapsed into folder nodes.
                 Files outside these folders remain as individual nodes.
                 Use forward slashes (e.g., "src/drivers", "third_party/lwip").
+            auto_group_parent_folders: If True, automatically groups input files
+                by their parent folders discovered from input file paths.
+                Can be combined with `folder_paths` for hybrid grouping.
+                In hybrid mode, manual folders take precedence over automatic
+                grouping for matching files.
             min_size: Minimum size in bytes for ungrouped input files.
                 Files not in specified folders with size <= min_size are filtered out.
                 Defaults to 0 (filters only empty files).
@@ -74,6 +81,7 @@ class LinkInfoGraphBuilder:
 
         # Folder grouping configuration
         self.folder_paths = folder_paths or []
+        self.auto_group_parent_folders = auto_group_parent_folders
         self.min_size = min_size
         # Map: folder_path -> set of input_file ids in that folder
         self.folder_to_inputfiles: Dict[str, Set[str]] = {}
@@ -100,34 +108,104 @@ class LinkInfoGraphBuilder:
 
     def _build_folder_mapping(self) -> None:
         """Build mappings between folders and input files."""
-        if not self.folder_paths:
+        if not self.folder_paths and not self.auto_group_parent_folders:
             return
 
-        # Normalize all folder paths
-        normalized_folders = [
-            self._normalize_folder_path(fp) for fp in self.folder_paths
-        ]
+        # Normalize and de-duplicate manual folder paths.
+        normalized_folders = list(
+            {
+                self._normalize_folder_path(fp)
+                for fp in self.folder_paths
+                if self._normalize_folder_path(fp)
+            }
+        )
 
-        # For each input file, check if it belongs to one of the specified folders
+        # For each input file, determine the grouping folder (if any).
         for input_file in self.data.input_files.values():
             if not input_file.path:
                 continue
 
-            normalized_file_path = self._normalize_folder_path(input_file.path)
+            file_parent_folder = self._get_input_file_parent_folder(input_file)
+            if not file_parent_folder:
+                continue
 
-            # Check if this file is in one of the specified folders
-            for folder_path in normalized_folders:
-                # Check if the file path starts with the folder path
-                if (
-                    normalized_file_path == folder_path
-                    or normalized_file_path.startswith(folder_path + "/")
-                ):
-                    # Add to mapping
-                    if folder_path not in self.folder_to_inputfiles:
-                        self.folder_to_inputfiles[folder_path] = set()
-                    self.folder_to_inputfiles[folder_path].add(input_file.id)
-                    self.inputfile_to_folder[input_file.id] = folder_path
-                    break  # Each input file belongs to at most one folder
+            # Manual folder paths take precedence in hybrid mode.
+            selected_folder = self._find_best_matching_manual_folder(
+                file_parent_folder, normalized_folders
+            )
+
+            # Automatic mode groups by discovered parent folder.
+            if selected_folder is None and self.auto_group_parent_folders:
+                selected_folder = file_parent_folder
+
+            if selected_folder is not None:
+                if selected_folder not in self.folder_to_inputfiles:
+                    self.folder_to_inputfiles[selected_folder] = set()
+                self.folder_to_inputfiles[selected_folder].add(input_file.id)
+                self.inputfile_to_folder[input_file.id] = selected_folder
+
+    def _find_best_matching_manual_folder(
+        self, file_parent_folder: str, manual_folders: List[str]
+    ) -> Optional[str]:
+        """Find the best matching manual folder for a file parent folder.
+
+        Uses longest-prefix matching so nested folder paths map deterministically
+        to the most specific manual folder.
+
+        Args:
+            file_parent_folder: Normalized parent folder for an input file.
+            manual_folders: Normalized manual folder paths.
+
+        Returns:
+            Best matching manual folder path, or None if no match exists.
+        """
+        matches = [
+            folder_path
+            for folder_path in manual_folders
+            if file_parent_folder == folder_path
+            or file_parent_folder.startswith(folder_path + "/")
+        ]
+        if not matches:
+            return None
+        return max(matches, key=lambda p: (len(p), p))
+
+    def _get_input_file_parent_folder(self, input_file: InputFile) -> Optional[str]:
+        """Get a normalized parent folder for an input file.
+
+        This handles two common variants from linker XML:
+        - `input_file.path` already contains only the parent directory.
+        - `input_file.path` contains a full path including filename.
+
+        Args:
+            input_file: Input file model from parsed linkinfo.
+
+        Returns:
+            Normalized parent folder path, or None if not derivable.
+        """
+        if not input_file.path:
+            return None
+
+        normalized_path = self._normalize_folder_path(input_file.path)
+        if not normalized_path:
+            return None
+
+        file_name = (input_file.name or "").replace("\\", "/").split("/")[-1]
+        if file_name:
+            lower_path = normalized_path.lower()
+            lower_name = file_name.lower()
+
+            # Path is just the filename without folder.
+            if lower_path == lower_name:
+                return None
+
+            # Path includes filename; strip it to get parent folder.
+            suffix = "/" + lower_name
+            if lower_path.endswith(suffix):
+                parent = normalized_path[: -len(suffix)]
+                return parent or None
+
+        # Path is already a folder path.
+        return normalized_path
 
     # -------------------------------------------------------------
 
@@ -466,10 +544,12 @@ class LinkInfoGraphBuilder:
 
 
 if __name__ == "__main__":
-    parser = LinkInfoParser(
-        "example_files/enet_cli_debug_linkinfo.xml", filter_debug=True
-    )
+    from ._xml_parser import LinkInfoXmlParser
 
-    builder = LinkInfoGraphBuilder(parser)
+    data = LinkInfoXmlParser(
+        "example_files/enet_cli_debug_linkinfo.xml", filter_debug=True
+    ).parse()
+
+    builder = LinkInfoGraphBuilder(data)
     builder.build_graph()
     builder.export_pyvis("outputs/inputfile_graph.html")

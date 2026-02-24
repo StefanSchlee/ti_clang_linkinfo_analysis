@@ -111,6 +111,7 @@ Visualize dependencies between input files based on how object components refere
 analyzer.export_inputfile_graph_pyvis(
     "dependencies.html",
     folder_paths=["src/drivers", "src/middleware"],
+    auto_group_parent_folders=True,
     min_size=1024,
     show=True
 )
@@ -119,6 +120,9 @@ analyzer.export_inputfile_graph_pyvis(
 **Configuration:**
 - `output_path` (required): Where to write the HTML file
 - `folder_paths` (optional): List of folder paths to group as single nodes. All input files in these folders are collapsed into folder nodes. Input files NOT in these folders remain as individual nodes.
+- `auto_group_parent_folders` (optional, default=False): Automatically discover and group by all unique parent folders from input-file paths.
+    - Can be combined with `folder_paths` (hybrid mode)
+    - Manual `folder_paths` take precedence for matching files
 - `min_size` (optional, default=0): Minimum byte size threshold for ungrouped input files. Files not in folders with size ≤ min_size are filtered out.
 - `show` (optional, default=False): Automatically open the HTML in a web browser
 
@@ -128,6 +132,7 @@ analyzer.export_inputfile_graph_pyvis(
 analyzer.export_inputfile_graph_graphml(
     "dependencies.graphml",
     folder_paths=["src/drivers", "src/middleware"],
+    auto_group_parent_folders=True,
     min_size=1024
 )
 ```
@@ -223,6 +228,7 @@ analyzer.export_inputfile_graph_pyvis(
         "third_party/lwip",
         "third_party/freertos"
     ],
+    auto_group_parent_folders=True,
     min_size=2048,  # Hide small ungrouped files
     show=True
 )
@@ -235,6 +241,7 @@ analyzer.export_inputfile_graph_graphml(
         "src/middleware",
         "src/application"
     ],
+    auto_group_parent_folders=True,
     min_size=2048
 )
 ```

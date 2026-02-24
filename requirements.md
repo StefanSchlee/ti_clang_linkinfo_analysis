@@ -43,12 +43,15 @@ Hint: This feature is already partly implemented in the internal markdown export
 2. The base graph is drawn on the input-file level
 3. The nodes are input files, with size based on the accumulated byte size of all object components
 4. The edges between nodes originate from the "refd_ro_sections" and "refd_rw_sections" of the object components, aggregated at the input-file level
-5. I want to optionally supply a list of folder paths, which are added as folder nodes:
-   1. All input-files which belong to one of these folders are removed as individual nodes and accumulated into these folder nodes
-   2. The folder node size is equal to the sum of the input files belonging to it
-   3. The edges between folder nodes and other folder/input-file nodes are aggregated from all links of the underlying input files
-   4. Input files NOT in the specified folders remain as individual nodes
-6. Export formats: pyvis HTML (interactive) and GraphML (for external tools)
+5. Supports folder grouping in two modes:
+   - Manual mode: Optionally supply a list of folder paths to group as nodes
+   - Automatic mode: Automatically discover all unique parent folders of input files
+   1. Folder grouping behavior:
+      1. All input-files which belong to one of these folders are removed as individual nodes and accumulated into these folder nodes
+      2. The folder node size is equal to the sum of the input files belonging to it
+      3. The edges between folder nodes and other folder/input-file nodes are aggregated from all links of the underlying input files
+      4.  Input files NOT in the specified folders remain as individual nodes
+6.  Export formats: pyvis HTML (interactive) and GraphML (for external tools)
 
 # Req-9: Documentation
 1. The main README.md is for everyone using this repository (developers, contributors)
@@ -111,3 +114,13 @@ Hint: This feature is already partly implemented in the internal markdown export
 
 # Req-11: Demos
 1. In the "demo/" folder, i want scripts for me to be run manually, to inspect the ouputs of the different public api functions on the example linkinfo files.
+# Req-12: Automatic Parent-Folder Grouping in Graph Analysis
+1. For graph visualization, add support for automatically grouping input files by their unique parent folders
+2. This feature reduces node count significantly without requiring manual folder path specification
+3. Implementation details:
+   - Add `auto_group_parent_folders` boolean parameter to graph export methods
+   - Extract all unique parent directories from input file paths
+   - Treat these automatically discovered folders as grouping nodes in the graph
+   - Can be combined with manual `folder_paths` for hybrid grouping strategies
+4. Available in both PyVis HTML export and GraphML export methods
+5. Update tests to verify automatic grouping works correctly and reduces node count
