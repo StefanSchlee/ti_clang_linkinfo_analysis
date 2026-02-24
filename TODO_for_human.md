@@ -1,15 +1,8 @@
-- license on pypi missing
+
 - screenshots in readme
 - in github-profile einfügen
 - glob filter für path grouping?
 
-  - Umrechung in KB in icicle unpraktikabel -> passt nicht mit anderen plots zusammen
-
-  - Dokumentieren, welcher linkerflags nötig sind (tested for compiler V4)
-
-    - --gen_xml_func_hash
-
-    - –-xml_link_info
 
     Suche in dependency graph
     In dependency: use parent folder as default-option to group (show full path maybe)
