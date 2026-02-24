@@ -3,8 +3,6 @@
 - in github-profile einfügen
 - glob filter für path grouping?
 
-  - Total size by-memory und by-inputfile passt nicht zusammen wegen sysmem -> make hint
-
   - Umrechung in KB in icicle unpraktikabel -> passt nicht mit anderen plots zusammen
 
   - Dokumentieren, welcher linkerflags nötig sind (tested for compiler V4)

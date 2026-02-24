@@ -13,13 +13,17 @@ class InputFile:
     Attributes:
         id: Unique identifier for this input file.
         name: Display name of the file (e.g., "main.o", "libdriver.a").
+        file: Actual filename of the input file.
         path: Full source path to the input file.
+        kind: Type of input file (e.g., "object", "archive").
         object_components: List of ObjectComponents contained in this file.
     """
 
     id: str
     name: Optional[str] = None
+    file: Optional[str] = None
     path: Optional[str] = None
+    kind: Optional[str] = None
     object_components: List["ObjectComponent"] = field(default_factory=list)
 
     def add_component(self, component: "ObjectComponent") -> None:
