@@ -3,6 +3,20 @@
 - in github-profile einfügen
 - glob filter für path grouping?
 
+  - Total size by-memory und by-inputfile passt nicht zusammen wegen sysmem -> make hint
+
+  - Umrechung in KB in icicle unpraktikabel -> passt nicht mit anderen plots zusammen
+
+  - Dokumentieren, welcher linkerflags nötig sind (tested for compiler V4)
+
+    - --gen_xml_func_hash
+
+    - –-xml_link_info
+
+    Suche in dependency graph
+    In dependency: use parent folder as default-option to group (show full path maybe)
+    In dependency: maybe filters what to exclude from grouping
+
 - Semantic FeatureGroups
   - linking between groups similar to input files: aggregate input file links
   - with path filters
@@ -40,6 +54,9 @@
       - cloud agents
       - subagents
     - Anbieter & costs
+    - Dica+Kilo mit Copilot vergleichen
+      - Intelligence scores (wie bei Anfangszeiten smartphone, diese Unterschiede entscheiden stark was geht)
+      - Beispiel?
     - summary:
       - tool in einem Tag statt 2 Wochen
       - minimal costs in € ~1€ (+1 Tag mich)

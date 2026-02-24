@@ -42,11 +42,18 @@ def _export_input_file_hierarchy(data: LinkInfoData, output_path: str) -> None:
     lines.append(f"# Input Files ({len(data.input_files)}, sorted by total size)\n\n")
 
     total_all_components = sum(c.size or 0 for c in data.object_components.values())
-    lines.append(f"**Total size (all components): {total_all_components} bytes**\n\n")
+    lines.extend(
+        [
+            f"**Total size: {total_all_components} bytes**\n",
+            "Note: Some sections like .sysmem are missing here -> see memory area report for full memory data\n\n",
+        ]
+    )
 
     components_without_input = [
         comp for comp in data.object_components.values() if comp.input_file is None
     ]
+    sorted_comps: List[ObjectComponent] = []
+    total_size_no_input = 0
     if components_without_input:
         sorted_comps = _sorted_by_size_then_name(
             components_without_input,
@@ -54,9 +61,40 @@ def _export_input_file_hierarchy(data: LinkInfoData, output_path: str) -> None:
             name_fn=lambda c: c.name or c.id,
         )
         total_size_no_input = sum(c.size or 0 for c in sorted_comps)
+
+    sorted_input_files = _sorted_by_size_then_name(
+        data.input_files.values(),
+        size_fn=lambda f: f.get_total_size(),
+        name_fn=lambda f: f.name or f.id,
+    )
+
+    input_file_names = [f.name or f.id for f in sorted_input_files]
+    input_file_total_sizes = [str(f.get_total_size()) for f in sorted_input_files]
+    input_file_component_counts = [len(f.object_components) for f in sorted_input_files]
+    if sorted_comps:
+        input_file_names = ["Components without Input File", *input_file_names]
+        input_file_total_sizes = [str(total_size_no_input), *input_file_total_sizes]
+        input_file_component_counts = [
+            len(sorted_comps),
+            *input_file_component_counts,
+        ]
+    max_input_file_name_len = max((len(n) for n in input_file_names), default=0)
+    max_input_file_total_width = max(
+        (len(s) for s in input_file_total_sizes), default=0
+    )
+    max_input_file_count_width = max(
+        (len(str(count)) for count in input_file_component_counts), default=0
+    )
+
+    if sorted_comps:
+        name_padding = " " * (
+            max_input_file_name_len - len("Components without Input File")
+        )
+        total_size_str = str(total_size_no_input).rjust(max_input_file_total_width)
+        count_str = str(len(sorted_comps)).rjust(max_input_file_count_width)
         lines.append(
-            "## Components without Input File "
-            f"(total size: {total_size_no_input} bytes)\n\n"
+            f"## Components without Input File{name_padding} "
+            f"({count_str} components, total size: {total_size_str} bytes)\n\n"
         )
         names = [c.name or c.id for c in sorted_comps]
         max_name_len = max((len(n) for n in names), default=0)
@@ -69,27 +107,17 @@ def _export_input_file_hierarchy(data: LinkInfoData, output_path: str) -> None:
             )
         lines.append("\n")
 
-    sorted_input_files = _sorted_by_size_then_name(
-        data.input_files.values(),
-        size_fn=lambda f: f.get_total_size(),
-        name_fn=lambda f: f.name or f.id,
-    )
-
-    input_file_names = [f.name or f.id for f in sorted_input_files]
-    input_file_total_sizes = [str(f.get_total_size()) for f in sorted_input_files]
-    max_input_file_name_len = max((len(n) for n in input_file_names), default=0)
-    max_input_file_total_width = max(
-        (len(s) for s in input_file_total_sizes), default=0
-    )
-
     for input_file in sorted_input_files:
         total_size = input_file.get_total_size()
         total_size_str = str(total_size).rjust(max_input_file_total_width)
         input_file_name = input_file.name or input_file.id
         name_padding = " " * (max_input_file_name_len - len(input_file_name))
+        count_str = str(len(input_file.object_components)).rjust(
+            max_input_file_count_width
+        )
         lines.append(
             f"## {input_file_name}{name_padding} "
-            f"({len(input_file.object_components)} components, "
+            f"({count_str} components, "
             f"total size: {total_size_str} bytes)\n"
         )
         if input_file.path:
@@ -227,18 +255,23 @@ def _append_logical_group_hierarchy(
     input_file_totals = [
         sum(c.size or 0 for c in comps) for _, comps in sorted_input_files
     ]
+    input_file_component_counts = [len(comps) for _, comps in sorted_input_files]
     max_input_file_total_width = max(
         (len(str(size)) for size in input_file_totals), default=0
     )
+    max_input_file_count_width = max(
+        (len(str(count)) for count in input_file_component_counts), default=0
+    )
 
-    for (input_file_name, comps), total_size in zip(
-        sorted_input_files, input_file_totals
+    for (input_file_name, comps), total_size, count in zip(
+        sorted_input_files, input_file_totals, input_file_component_counts
     ):
         name_padding = " " * (max_input_file_name_len - len(input_file_name))
         total_size_str = str(total_size).rjust(max_input_file_total_width)
+        count_str = str(count).rjust(max_input_file_count_width)
         lines.append(
             f"{indent}- **{input_file_name}**{name_padding} "
-            f"({len(comps)} components, total: {total_size_str} bytes)\n"
+            f"({count_str} components, total: {total_size_str} bytes)\n"
         )
         sorted_comps = _sorted_by_size_then_name(
             comps, size_fn=lambda c: c.size or 0, name_fn=lambda c: c.name or c.id
